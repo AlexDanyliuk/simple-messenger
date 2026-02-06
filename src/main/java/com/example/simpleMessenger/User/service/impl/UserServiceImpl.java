@@ -6,7 +6,6 @@ import com.example.simpleMessenger.User.entity.Status;
 import com.example.simpleMessenger.User.entity.User;
 import com.example.simpleMessenger.User.repository.UserRepository;
 import com.example.simpleMessenger.User.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -45,7 +44,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User findAllByUsername(String username) {
+    public User findByUsername(String username) {
         return userRepository.findByUsername(username);
     }
 

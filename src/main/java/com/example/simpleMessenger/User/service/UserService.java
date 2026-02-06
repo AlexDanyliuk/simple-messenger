@@ -13,8 +13,5 @@ public interface UserService {
 
     List<User> findAllByStatus();
 
-    User findAllByUsername(String username);
-
-
     User findByUsername(String username);
 }
