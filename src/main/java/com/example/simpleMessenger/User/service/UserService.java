@@ -2,8 +2,6 @@ package com.example.simpleMessenger.User.service;
 
 
 import com.example.simpleMessenger.User.entity.User;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 
 
@@ -18,4 +16,5 @@ public interface UserService {
     User findAllByUsername(String username);
 
 
+    User findByUsername(String username);
 }
