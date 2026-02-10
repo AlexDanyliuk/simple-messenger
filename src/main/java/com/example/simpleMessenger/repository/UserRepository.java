@@ -1,0 +1,20 @@
+package com.example.simpleMessenger.repository;
+
+
+import com.example.simpleMessenger.entity.Status;
+import com.example.simpleMessenger.entity.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface UserRepository extends JpaRepository<User,Long> {
+
+    List<User> findAllByStatus(Status status);
+
+    User findByUsername(String username);
+
+    Optional<User> findByEmail(String email);
+}
