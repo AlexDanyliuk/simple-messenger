@@ -1,15 +1,11 @@
 package com.example.simpleMessenger.service;
 
 
-import com.example.simpleMessenger.dto.JwtAuthenticationDto;
-import com.example.simpleMessenger.dto.RefreshTokenDto;
-import com.example.simpleMessenger.dto.UserCredentialsDto;
-import com.example.simpleMessenger.dto.UserDto;
+import com.example.simpleMessenger.dto.*;
 import com.example.simpleMessenger.entity.User;
 
 import javax.naming.AuthenticationException;
 import java.util.List;
-import java.util.Optional;
 
 
 public interface UserService {
@@ -17,15 +13,15 @@ public interface UserService {
     JwtAuthenticationDto singIn(UserCredentialsDto userCredentialsDto) throws AuthenticationException;;
     JwtAuthenticationDto refreshToken(RefreshTokenDto refreshTokenDto) throws Exception ;
 
-    User saveUser(UserDto userDto);
+    UserResponseDto saveUser(UserRegisterDto registerDto);
 
     void disconnect(User user);
 
+    UserProfileDto updateProfile(UpdateUserDto updateUserDto);
+
+    UserProfileDto getCurrentUserProfile();
+
     List<User> findAllByStatus();
 
-    User findByUsername(String username);
-
-    Optional<User> getUserByEmail(String email);
-    String addUser(UserDto user);
 
 }

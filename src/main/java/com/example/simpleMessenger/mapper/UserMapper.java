@@ -1,30 +1,24 @@
 package com.example.simpleMessenger.mapper;
 
+import com.example.simpleMessenger.dto.UserRegisterDto;
 import com.example.simpleMessenger.dto.UserDto;
+import com.example.simpleMessenger.dto.UserProfileDto;
+import com.example.simpleMessenger.dto.UserResponseDto;
 import com.example.simpleMessenger.entity.User;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
-@Component
-public class UserMapper {
+@Mapper(componentModel = "spring")
+public interface UserMapper {
 
-    public UserDto toDto(User user) {
-        if (user == null) return null;
+    UserDto toDto(User user);
 
-        UserDto dto = new UserDto();
-        dto.setUsername(user.getUsername());
-        dto.setEmail(user.getEmail());
-        dto.setFullName(user.getFullName());
-        return dto;
-    }
+    User toEntity(UserDto userDto);
 
-    public User toEntity(UserDto userDto) {
-        if (userDto == null) return null;
+    User toEntity(UserRegisterDto registerDto);
+    UserRegisterDto toRegisterDto(User user);
 
-        User user = new User();
-        user.setUsername(userDto.getUsername());
-        user.setEmail(userDto.getEmail());
-        user.setPassword(userDto.getPassword());
-        user.setFullName(userDto.getFullName());
-        return user;
-    }
+    UserResponseDto toUserResponseDto(User user);
+
+    UserProfileDto toProfileDto(User user);
 }

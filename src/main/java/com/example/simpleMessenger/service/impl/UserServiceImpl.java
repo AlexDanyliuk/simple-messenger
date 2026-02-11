@@ -1,14 +1,16 @@
 package com.example.simpleMessenger.service.impl;
-import com.example.simpleMessenger.dto.JwtAuthenticationDto;
-import com.example.simpleMessenger.dto.RefreshTokenDto;
-import com.example.simpleMessenger.dto.UserCredentialsDto;
-import com.example.simpleMessenger.dto.UserDto;
+import com.example.simpleMessenger.dto.*;
 import com.example.simpleMessenger.entity.Status;
 import com.example.simpleMessenger.entity.User;
+import com.example.simpleMessenger.exceptionHandler.EmailAlreadyExistsException;
+import com.example.simpleMessenger.exceptionHandler.UsernameAlreadyExistsException;
 import com.example.simpleMessenger.mapper.UserMapper;
 import com.example.simpleMessenger.repository.UserRepository;
 import com.example.simpleMessenger.security.jwt.JwtService;
 import com.example.simpleMessenger.service.UserService;
+import jakarta.transaction.Transactional;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -50,23 +52,62 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User saveUser(UserDto userDto) {
-        User user = userMapper.toEntity(userDto);
+    @Transactional
+    public UserResponseDto saveUser(UserRegisterDto registerDto) {
+        User user = userMapper.toEntity(registerDto);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        if (userRepository.existsByEmail(registerDto.getEmail())) {
+            throw new EmailAlreadyExistsException(registerDto.getEmail());
+        }
+        if (userRepository.existsByUsername(registerDto.getUsername())) {
+            throw new UsernameAlreadyExistsException(registerDto.getUsername());
+        }
         user.setStatus(Status.ONLINE);
-        userRepository.save(user);
-        return user;
+        User saved = userRepository.save(user);
+        return userMapper.toUserResponseDto(saved);
     }
 
     @Override
     public void disconnect(User user) {
-        var storedUser = userRepository.findByUsername(user.getUsername());
+        Optional<User> optionalUser = userRepository.findByUsername(user.getUsername());
 
-        if (storedUser != null && storedUser.getStatus() == Status.ONLINE) {
-            storedUser.setStatus(Status.OFFLINE);
-            userRepository.save(storedUser);
+        if (optionalUser.isPresent()) {
+            User storedUser = optionalUser.get();
+
+            if (storedUser.getStatus() == Status.ONLINE) {
+                storedUser.setStatus(Status.OFFLINE);
+                userRepository.save(storedUser);
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    public UserProfileDto updateProfile(UpdateUserDto updateUserDto) {
+        Object principal = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getPrincipal();
+        String email = ((UserDetails) principal).getUsername();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (updateUserDto.getFullName() != null) {
+            user.setFullName(updateUserDto.getFullName());
         }
 
+        if (updateUserDto.getAvatarUrl() != null) {
+            user.setAvatarUrl(updateUserDto.getAvatarUrl());
+        }
+
+        if (updateUserDto.getUsername() != null) {
+            validateUsername(updateUserDto.getUsername(), user.getUsername());
+            user.setUsername(updateUserDto.getUsername());
+        }
+
+        User updatedUser = userRepository.save(user);
+        return userMapper.toProfileDto(updatedUser);
     }
 
     @Override
@@ -75,18 +116,26 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User findByUsername(String username) {
-        return userRepository.findByUsername(username);
+    public UserProfileDto getCurrentUserProfile() {
+        Object principal = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        String email = ((UserDetails) principal).getUsername();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return userMapper.toProfileDto(user);
     }
 
-    @Override
-    public Optional<User> getUserByEmail(String email) {
-        return userRepository.findByEmail(email);
-    }
-
-    @Override
-    public String addUser(UserDto user) {
-        return "";
+    private void validateUsername(String newUsername, String currentUsername) {
+        if (!newUsername.equals(currentUsername)) {
+            boolean exists = userRepository.existsByUsername(newUsername);
+            if (exists) {
+                throw new RuntimeException("Username already exists");
+            }
+        }
     }
 
     private User findByCredentials(UserCredentialsDto userCredentialsDto) throws AuthenticationException {
@@ -103,8 +152,4 @@ public class UserServiceImpl implements UserService {
     private User findUserByEmail(String email) throws Exception{
         return userRepository.findByEmail(email).orElseThrow(() -> new Exception("User not found"));
     }
-
-
-
-
 }

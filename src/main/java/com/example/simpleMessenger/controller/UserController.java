@@ -1,17 +1,16 @@
 package com.example.simpleMessenger.controller;
 
-
-import com.example.simpleMessenger.dto.UserDto;
+import com.example.simpleMessenger.dto.UserRegisterDto;
+import com.example.simpleMessenger.dto.UpdateUserDto;
+import com.example.simpleMessenger.dto.UserProfileDto;
+import com.example.simpleMessenger.dto.UserResponseDto;
 import com.example.simpleMessenger.entity.User;
 import com.example.simpleMessenger.service.UserService;
-import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,11 +25,11 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/registration")
-    public User createUser(@RequestBody UserDto userDto) {
-        return userService.saveUser(userDto);
-    }
 
+    @PostMapping("/registration")
+    public UserResponseDto createUser(@Valid @RequestBody UserRegisterDto registerDto) {
+        return userService.saveUser(registerDto);
+    }
 
     @MessageMapping("/user.disconnectUser")
     @SendTo("/topic/public")
@@ -44,11 +43,14 @@ public class UserController {
         return ResponseEntity.ok(userService.findAllByStatus());
     }
 
-    @GetMapping("current-user")
-    public ResponseEntity<User> getCurrentUser(){
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        return ResponseEntity.ok(userService.findByUsername(username));
+    @GetMapping("/profile")
+    public UserProfileDto getProfile() {
+        return userService.getCurrentUserProfile();
+    }
+
+    @PatchMapping("/profile")
+    public UserProfileDto updateProfile(@RequestBody UpdateUserDto updateUserDto) {
+        return userService.updateProfile(updateUserDto);
     }
 
     //    @MessageMapping("/user.addUser")
