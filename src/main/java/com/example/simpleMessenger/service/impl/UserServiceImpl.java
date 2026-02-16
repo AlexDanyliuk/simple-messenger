@@ -112,7 +112,18 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> findAllByStatus() {
-        return  userRepository.findAllByStatus(Status.ONLINE);
+
+        Object principal = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        String currentEmail = ((UserDetails) principal).getUsername();
+
+        return userRepository.findAllByStatus(Status.ONLINE)
+                .stream()
+                .filter(user -> !user.getEmail().equals(currentEmail))
+                .toList();
     }
 
     @Override
@@ -133,7 +144,7 @@ public class UserServiceImpl implements UserService {
         if (!newUsername.equals(currentUsername)) {
             boolean exists = userRepository.existsByUsername(newUsername);
             if (exists) {
-                throw new RuntimeException("Username already exists");
+                throw new RuntimeException("Username already taken");
             }
         }
     }

@@ -20,7 +20,6 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         this.chatRoomService = chatRoomService;
     }
 
-
     @Override
     public ChatMessage saveChatMessage(ChatMessage chatMessage) {
 
@@ -35,9 +34,8 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         return chatMessage;
     }
 
-
     @Override
-    public List<ChatMessage> findChatMessages(String senderId, String recipientId) {
+    public List<ChatMessage> findChatMessages(Long senderId, Long recipientId) {
         var chatId = chatRoomService.getChatRoomId(senderId, recipientId, false);;
         return chatId.map(chatMessageRepository::findByChatId).orElse(new ArrayList<>());
     }

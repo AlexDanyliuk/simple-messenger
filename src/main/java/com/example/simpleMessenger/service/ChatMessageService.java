@@ -10,6 +10,5 @@ public interface ChatMessageService {
 
     ChatMessage saveChatMessage(ChatMessage chatMessage);
 
-
-    List<ChatMessage> findChatMessages(String senderId, String recipientId);
+    List<ChatMessage> findChatMessages(Long senderId, Long recipientId);
 }

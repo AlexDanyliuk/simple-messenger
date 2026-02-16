@@ -16,9 +16,8 @@ public class ChatRoomServiceImpl implements ChatRoomService {
         this.chatRoomRepository = chatRoomRepository;
     }
 
-
     @Override
-    public Optional<String> getChatRoomId(String senderId, String recipientId, boolean createNewRoomIfNotExist) {
+    public Optional<String> getChatRoomId(Long senderId, Long recipientId, boolean createNewRoomIfNotExist) {
         return chatRoomRepository.findBySenderIdAndRecipientId(senderId, recipientId)
                 .map(ChatRoom::getChatId)
                 .or(()-> {
@@ -30,20 +29,29 @@ public class ChatRoomServiceImpl implements ChatRoomService {
                 });
     }
 
-    private String createChatId(String senderId, String recipientId) {
-        var chatId = String.format("%s_%s", senderId, recipientId);
+    private String createChatId(Long senderId, Long recipientId) {
+
+        Long first = Math.min(senderId, recipientId);
+        Long second = Math.max(senderId, recipientId);
+
+        String chatId = first + "_" + second;
+
         ChatRoom senderRecipient = ChatRoom.builder()
                 .chatId(chatId)
                 .senderId(senderId)
                 .recipientId(recipientId)
                 .build();
+
         ChatRoom recipientSender = ChatRoom.builder()
                 .chatId(chatId)
                 .senderId(recipientId)
                 .recipientId(senderId)
                 .build();
+
         chatRoomRepository.save(senderRecipient);
         chatRoomRepository.save(recipientSender);
+
         return chatId;
     }
+
 }

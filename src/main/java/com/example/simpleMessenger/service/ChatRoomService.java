@@ -7,5 +7,5 @@ import java.util.Optional;
 @Service
 public interface ChatRoomService {
 
-    Optional<String> getChatRoomId(String senderId, String recipientId, boolean createNewRoomIfNotExist);
+    Optional<String> getChatRoomId(Long senderId, Long recipientId, boolean createNewRoomIfNotExist);
 }

@@ -25,7 +25,6 @@ public class UserController {
         this.userService = userService;
     }
 
-
     @PostMapping("/registration")
     public UserResponseDto createUser(@Valid @RequestBody UserRegisterDto registerDto) {
         return userService.saveUser(registerDto);
@@ -49,18 +48,9 @@ public class UserController {
     }
 
     @PatchMapping("/profile")
-    public UserProfileDto updateProfile(@RequestBody UpdateUserDto updateUserDto) {
+    public UserProfileDto updateProfile(@Valid @RequestBody UpdateUserDto updateUserDto) {
         return userService.updateProfile(updateUserDto);
     }
 
-    //    @MessageMapping("/user.addUser")
-//    @SendTo("/topic/public")
-//    public User addUser(@Payload UserDto userDto){
-//        User existingUser = userService.findByUsername(userDto.getUsername());
-//        if(existingUser == null){
-//            userService.saveUser(userDto);
-//        }
-//        return userService.saveUser(userDto);
-//    }
 
 }
