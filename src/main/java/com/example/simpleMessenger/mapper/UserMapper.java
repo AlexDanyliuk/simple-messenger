@@ -1,9 +1,6 @@
 package com.example.simpleMessenger.mapper;
 
-import com.example.simpleMessenger.dto.UserRegisterDto;
-import com.example.simpleMessenger.dto.UserDto;
-import com.example.simpleMessenger.dto.UserProfileDto;
-import com.example.simpleMessenger.dto.UserResponseDto;
+import com.example.simpleMessenger.dto.*;
 import com.example.simpleMessenger.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -21,4 +18,7 @@ public interface UserMapper {
     UserResponseDto toUserResponseDto(User user);
 
     UserProfileDto toProfileDto(User user);
+    UserListDto toUserListDto(User user);
+
+
 }

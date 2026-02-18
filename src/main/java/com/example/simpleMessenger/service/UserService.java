@@ -2,7 +2,9 @@ package com.example.simpleMessenger.service;
 
 
 import com.example.simpleMessenger.dto.*;
+import com.example.simpleMessenger.entity.Status;
 import com.example.simpleMessenger.entity.User;
+import org.jspecify.annotations.Nullable;
 
 import javax.naming.AuthenticationException;
 import java.util.List;
@@ -21,7 +23,14 @@ public interface UserService {
 
     UserProfileDto getCurrentUserProfile();
 
-    List<User> findAllByStatus();
+    List<User> findAllOnlineUsers();
 
+    List<UserListDto> getAllUsersExceptMe(String email);
+
+    void logout();
+
+    User setUserOnline(String email);
+
+    User setUserOffline(String email);
 
 }

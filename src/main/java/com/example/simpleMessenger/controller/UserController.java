@@ -1,10 +1,10 @@
 package com.example.simpleMessenger.controller;
 
-import com.example.simpleMessenger.dto.UserRegisterDto;
-import com.example.simpleMessenger.dto.UpdateUserDto;
-import com.example.simpleMessenger.dto.UserProfileDto;
-import com.example.simpleMessenger.dto.UserResponseDto;
+import com.example.simpleMessenger.dto.*;
+import com.example.simpleMessenger.entity.Status;
 import com.example.simpleMessenger.entity.User;
+import com.example.simpleMessenger.mapper.UserMapper;
+import com.example.simpleMessenger.repository.UserRepository;
 import com.example.simpleMessenger.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +13,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @RequestMapping("/user")
@@ -20,10 +21,15 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final UserMapper userMapper;
+    private final UserRepository userRepository;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, UserMapper userMapper, UserRepository userRepository) {
         this.userService = userService;
+        this.userMapper = userMapper;
+        this.userRepository = userRepository;
     }
+
 
     @PostMapping("/registration")
     public UserResponseDto createUser(@Valid @RequestBody UserRegisterDto registerDto) {
@@ -38,9 +44,12 @@ public class UserController {
     }
 
     @GetMapping("/users")
-    public ResponseEntity<List<User>> findConnectedUsers(){
-        return ResponseEntity.ok(userService.findAllByStatus());
+    public ResponseEntity<List<UserListDto>> getAllUsers(Principal principal) {
+        return ResponseEntity.ok(
+                userService.getAllUsersExceptMe(principal.getName())
+        );
     }
+
 
     @GetMapping("/profile")
     public UserProfileDto getProfile() {
@@ -51,6 +60,14 @@ public class UserController {
     public UserProfileDto updateProfile(@Valid @RequestBody UpdateUserDto updateUserDto) {
         return userService.updateProfile(updateUserDto);
     }
+
+//    @GetMapping("/users/online")
+//    public List<UserDto> getOnlineUsers() {
+//        return userService.findAllOnlineUsers()
+//                .stream()
+//                .map(userMapper::toDto)
+//                .toList();
+//    }
 
 
 }
