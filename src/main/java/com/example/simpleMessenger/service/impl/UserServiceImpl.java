@@ -125,6 +125,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserProfileDto getUserById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return userMapper.toProfileDto(user);
+    }
+
+    @Override
     public List<User> findAllOnlineUsers() {
         return userRepository.findAllByStatus(Status.ONLINE);
     }

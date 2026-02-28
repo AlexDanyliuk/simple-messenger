@@ -56,6 +56,11 @@ public class UserController {
         return userService.getCurrentUserProfile();
     }
 
+    @GetMapping("/{id}")
+    public UserProfileDto getUserById(@PathVariable Long id) {
+        return userService.getUserById(id);
+    }
+
     @PatchMapping("/profile")
     public UserProfileDto updateProfile(@Valid @RequestBody UpdateUserDto updateUserDto) {
         return userService.updateProfile(updateUserDto);

@@ -23,6 +23,8 @@ public interface UserService {
 
     UserProfileDto getCurrentUserProfile();
 
+    UserProfileDto getUserById(Long id);
+
     List<User> findAllOnlineUsers();
 
     List<UserListDto> getAllUsersExceptMe(String email);
