@@ -12,6 +12,7 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
 import java.util.List;
@@ -50,6 +51,30 @@ public class UserController {
         );
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<List<UserListDto>> searchUsers(
+            @RequestParam String q,
+            Principal principal) {
+        return ResponseEntity.ok(
+                userService.searchByUsername(q, principal.getName())
+        );
+    }
+
+    @GetMapping("/conversations")
+    public ResponseEntity<List<UserListDto>> getConversations() {
+        return ResponseEntity.ok(userService.getUsersWithConversations());
+    }
+
+    @PostMapping("/avatar")
+    public ResponseEntity<UserProfileDto> uploadAvatar(@RequestParam("file") MultipartFile file) {
+        try {
+            return ResponseEntity.ok(userService.uploadAvatar(file));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 
     @GetMapping("/profile")
     public UserProfileDto getProfile() {
@@ -65,14 +90,6 @@ public class UserController {
     public UserProfileDto updateProfile(@Valid @RequestBody UpdateUserDto updateUserDto) {
         return userService.updateProfile(updateUserDto);
     }
-
-//    @GetMapping("/users/online")
-//    public List<UserDto> getOnlineUsers() {
-//        return userService.findAllOnlineUsers()
-//                .stream()
-//                .map(userMapper::toDto)
-//                .toList();
-//    }
 
 
 }

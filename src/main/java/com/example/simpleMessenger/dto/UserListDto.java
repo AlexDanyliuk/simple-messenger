@@ -12,4 +12,6 @@ public class UserListDto {
     private String fullName;
     private String avatarUrl;
     private String status; // ONLINE / OFFLINE
+    private String lastMessage;
+    private java.util.Date lastMessageTime;
 }

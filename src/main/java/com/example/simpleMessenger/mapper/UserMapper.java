@@ -17,8 +17,10 @@ public interface UserMapper {
 
     UserResponseDto toUserResponseDto(User user);
 
+    @Mapping(target = "status", expression = "java(user.getStatus() != null ? user.getStatus().name() : null)")
     UserProfileDto toProfileDto(User user);
-    UserListDto toUserListDto(User user);
 
+    @Mapping(target = "status", expression = "java(user.getStatus() != null ? user.getStatus().name() : null)")
+    UserListDto toUserListDto(User user);
 
 }
