@@ -198,6 +198,11 @@ public class UserServiceImpl implements UserService {
                                 dto.setLastMessageTime(msg.getTimestamp());
                             });
 
+                    int unread = chatMessageRepository.countBySenderIdAndRecipientIdAndIsRead(
+                            partner.getId(), myId, false
+                    );
+                    dto.setUnreadCount(unread);
+
                     return dto;
                 })
                 .sorted((a, b) -> {

@@ -7,6 +7,7 @@ import com.example.simpleMessenger.repository.ChatMessageRepository;
 import com.example.simpleMessenger.service.ChatMessageService;
 import com.example.simpleMessenger.service.ChatRoomService;
 import com.example.simpleMessenger.service.UserService;
+import jakarta.transaction.Transactional;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -39,18 +40,25 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         chatMessage.setRecipientId(dto.getRecipientId());
         chatMessage.setContent(dto.getContent());
         chatMessage.setTimestamp(new Date());
+        chatMessage.setRead(false);
 
         ChatMessage saved = saveChatMessage(chatMessage);
 
         messagingTemplate.convertAndSend("/topic/chat/" + saved.getChatId(), saved);
 
+        int unreadForRecipient = chatMessageRepository.countBySenderIdAndRecipientIdAndIsRead(
+                senderId, dto.getRecipientId(), false
+        );
+
         UserListDto recipientDto = userService.getUserListDtoById(dto.getRecipientId());
         recipientDto.setLastMessage(saved.getContent());
         recipientDto.setLastMessageTime(saved.getTimestamp());
+        recipientDto.setUnreadCount(0); // sender бачить 0 непрочитаних
 
         UserListDto senderDto = userService.getUserListDtoById(senderId);
         senderDto.setLastMessage(saved.getContent());
         senderDto.setLastMessageTime(saved.getTimestamp());
+        senderDto.setUnreadCount(unreadForRecipient); // recipient бачить кількість непрочитаних
 
         messagingTemplate.convertAndSend("/topic/conversations/" + senderId, recipientDto);
         messagingTemplate.convertAndSend("/topic/conversations/" + dto.getRecipientId(), senderDto);
@@ -73,5 +81,30 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     public List<ChatMessage> findChatMessages(Long senderId, Long recipientId) {
         var chatId = chatRoomService.getChatRoomId(senderId, recipientId, false);
         return chatId.map(chatMessageRepository::findByChatIdOrderByTimestampAsc).orElse(new ArrayList<>());
+    }
+
+    @Override
+    @Transactional
+    public void markAsRead(Long senderId, Long recipientId) {
+        List<ChatMessage> unread = chatMessageRepository.findBySenderIdAndRecipientIdAndIsRead(
+                senderId, recipientId, false
+        );
+        unread.forEach(msg -> msg.setRead(true));
+        chatMessageRepository.saveAll(unread);
+
+        // Повідомляємо recipient що він прочитав повідомлення від senderId
+        UserListDto senderDto = userService.getUserListDtoById(senderId);
+        senderDto.setUnreadCount(0);
+
+        chatMessageRepository
+                .findTopBySenderIdAndRecipientIdOrSenderIdAndRecipientIdOrderByTimestampDesc(
+                        senderId, recipientId, recipientId, senderId
+                )
+                .ifPresent(msg -> {
+                    senderDto.setLastMessage(msg.getContent());
+                    senderDto.setLastMessageTime(msg.getTimestamp());
+                });
+
+        messagingTemplate.convertAndSend("/topic/conversations/" + recipientId, senderDto);
     }
 }

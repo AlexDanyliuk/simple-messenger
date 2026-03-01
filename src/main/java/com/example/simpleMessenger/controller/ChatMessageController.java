@@ -11,6 +11,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 
 import java.security.Principal;
 import java.util.List;
@@ -36,5 +37,12 @@ public class ChatMessageController {
     public ResponseEntity<List<ChatMessage>> findChatMessages(@PathVariable Long senderId,
                                                               @PathVariable Long recipientId) {
         return ResponseEntity.ok(chatMessageService.findChatMessages(senderId, recipientId));
+    }
+
+    @PostMapping("/messages/{senderId}/{recipientId}/read")
+    public ResponseEntity<Void> markAsRead(@PathVariable Long senderId,
+                                           @PathVariable Long recipientId) {
+        chatMessageService.markAsRead(senderId, recipientId);
+        return ResponseEntity.ok().build();
     }
 }

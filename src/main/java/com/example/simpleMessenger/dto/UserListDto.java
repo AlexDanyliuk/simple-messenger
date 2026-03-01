@@ -11,7 +11,8 @@ public class UserListDto {
     private String username;
     private String fullName;
     private String avatarUrl;
-    private String status; // ONLINE / OFFLINE
+    private String status;
     private String lastMessage;
     private java.util.Date lastMessageTime;
+    private int unreadCount;
 }

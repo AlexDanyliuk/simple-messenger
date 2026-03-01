@@ -22,5 +22,5 @@ public class ChatMessage {
     private Long recipientId;
     private String content;
     private Date timestamp;
-
+    private boolean isRead = false;
 }
