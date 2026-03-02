@@ -111,7 +111,7 @@ public class UserServiceImpl implements UserService {
         }
         User user = userMapper.toEntity(registerDto);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setStatus(Status.ONLINE);
+        user.setStatus(Status.OFFLINE);
         return userMapper.toUserResponseDto(userRepository.save(user));
     }
 
