@@ -5,7 +5,7 @@ let connected = false;
 let connectPromise = null;
 
 export function connect() {
-  if (connectPromise && connected) {
+  if (connectPromise) {
     return connectPromise;
   }
 
