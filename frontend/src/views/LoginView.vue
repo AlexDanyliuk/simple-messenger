@@ -88,7 +88,7 @@ export default {
           password: this.password
         });
         localStorage.setItem("token", response.data.token);
-        this.$router.push("/profile");
+        this.$router.push("/chats");
       } catch (err) {
         this.serverError = err.response?.data?.message || "Невірний email або пароль";
       } finally {

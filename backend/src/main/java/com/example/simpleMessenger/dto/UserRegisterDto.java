@@ -13,7 +13,7 @@ public class UserRegisterDto {
     @Email(message = "Invalid email format")
     @Pattern(
             regexp = "^[A-Za-z0-9._%+-]+@gmail\\.com$",
-            message = "Email must be a gmail.com address"
+            message = "Некоректний формат пошти. Використовуйте gmail.com адресу"
     )
     private String email;
 

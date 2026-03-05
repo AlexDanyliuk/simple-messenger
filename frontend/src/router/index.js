@@ -19,7 +19,7 @@ const routes = [
 
   { path: "/login",    component: LoginView    },
   { path: "/register", component: RegisterView },
-  { path: "/profile",  component: ProfileView  },
+  { path: "/profile",  component: ProfileView, meta: { requiresAuth: true }  },
 
   {
     path: "/",
@@ -27,11 +27,13 @@ const routes = [
     children: [
       {
         path: "chats",
-        component: SelectChatPlaceholder
+        component: SelectChatPlaceholder,
+        meta: { requiresAuth: true }
       },
       {
         path: "chat/:id",
-        component: ChatView
+        component: ChatView,
+        meta: { requiresAuth: true }
       }
     ]
   }
@@ -40,6 +42,28 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes
+});
+
+// Функція для перевірки авторизації
+function isAuthenticated() {
+  return !!localStorage.getItem("token");
+}
+
+// Навігаційний guard
+router.beforeEach((to, from, next) => {
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
+  const isLoggedIn = isAuthenticated();
+
+  if (requiresAuth && !isLoggedIn) {
+    // Якщо маршрут вимагає авторизацію, а користувач не авторизований
+    next("/login");
+  } else if ((to.path === "/login" || to.path === "/register") && isLoggedIn) {
+    // Якщо користувач уже авторизований і намагається зайти на login/register
+    next("/profile");
+  } else {
+    // Дозволяємо перехід
+    next();
+  }
 });
 
 export default router;

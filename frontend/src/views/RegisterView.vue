@@ -9,7 +9,7 @@
           @blur="touch('username')"
           @input="username = username.toLowerCase()"
           type="text"
-          placeholder="Імʼя користувача"
+          placeholder="Імʼя користувача(наприклад taras)"
           :class="{ 'input-error': errors.username || username.length > 20 }"
         />
         <span v-if="username.length > 20" class="field-error">Максимум 20 символів</span>
@@ -21,7 +21,7 @@
           v-model="fullName"
           @blur="touch('fullName')"
           type="text"
-          placeholder="Повне імʼя"
+          placeholder="Повне імʼя(наприклад Тарас Шевченко)"
           :class="{ 'input-error': errors.fullName }"
         />
         <span v-if="errors.fullName" class="field-error">{{ errors.fullName }}</span>
@@ -145,11 +145,15 @@ export default {
         this.$router.push("/login");
       } catch (err) {
         const msg = (err.response?.data?.message || "").toLowerCase();
-        if (msg.includes("username") || (msg.includes("user") && msg.includes("exist"))) {
+        
+        // Якщо це помилка валідації (400), показуємо повідомлення з backend
+        if (err.response?.status === 400) {
+          this.serverError = err.response?.data?.message || "Невірні дані. Перевірте введення.";
+        } else if (msg.includes("username") || (msg.includes("user") && msg.includes("exist"))) {
           this.serverError = `Користувач з іменем "${this.username}" вже існує`;
         } else if (msg.includes("email") || msg.includes("mail")) {
           this.serverError = `Пошта "${this.email}" вже використовується`;
-        } else if (err.response?.status === 500 || err.response?.status === 409 || err.response?.status === 400) {
+        } else if (err.response?.status === 500 || err.response?.status === 409) {
           this.serverError = `Користувач з іменем "${this.username}" вже існує`;
         } else {
           this.serverError = "Помилка реєстрації. Спробуйте ще раз.";
