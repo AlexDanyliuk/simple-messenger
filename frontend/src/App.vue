@@ -3,12 +3,8 @@
 </template>
 
 <script>
-import { connect } from "./services/websocket";
-
 export default {
-  mounted() {
-    connect();
-  }
+  // WebSocket підключається в ChatLayout коли користувач переходить на маршрути, що вимагають його
 };
 </script>
 
