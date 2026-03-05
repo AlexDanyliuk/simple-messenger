@@ -59,6 +59,20 @@ export default {
   border-radius: 4px;
 }
 
+@media (max-width: 768px) {
+  .messages {
+    padding: 16px 24px;
+    gap: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .messages {
+    padding: 12px 16px;
+    gap: 2px;
+  }
+}
+
 .msg {
   display: flex;
   flex-direction: column;

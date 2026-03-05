@@ -64,7 +64,21 @@ export default {
     }
 
     this.recipientId = Number(this.$route.params.id);
+
+    // Перевірка: не дозволяємо чат з собою
+    if (this.currentUserId === this.recipientId) {
+      this.$router.replace('/chats');
+      return;
+    }
+
     await this.loadRecipient();
+    
+    // Якщо користувач не існує - перенаправляємо на /chats
+    if (!this.recipient) {
+      this.$router.replace('/chats');
+      return;
+    }
+
     await this.loadMessages();
     await this.markAsRead();
     this.initSocket();

@@ -40,4 +40,29 @@ export default {
   border-bottom-left-radius: 4px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
+
+@media (max-width: 768px) {
+  .bubble {
+    max-width: 75%;
+    padding: 9px 14px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .bubble {
+    max-width: 85%;
+    padding: 8px 12px;
+    font-size: 12px;
+    border-radius: 14px;
+  }
+
+  .own {
+    border-bottom-right-radius: 2px;
+  }
+
+  .other {
+    border-bottom-left-radius: 2px;
+  }
+}
 </style>

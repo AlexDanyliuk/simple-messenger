@@ -122,6 +122,40 @@ export default {
   animation: fadeUp 0.3s ease;
 }
 
+@media (max-width: 480px) {
+  .auth-form {
+    width: calc(100% - 32px);
+    padding: 32px 24px;
+    margin: 16px;
+    border-radius: 12px;
+  }
+
+  h2 {
+    font-size: 20px;
+    margin-bottom: 24px;
+  }
+
+  input {
+    margin-bottom: 12px;
+    padding: 11px 14px;
+    font-size: 13px;
+  }
+
+  button {
+    padding: 12px;
+    font-size: 13px;
+  }
+
+  a {
+    margin-top: 16px;
+    font-size: 12px;
+  }
+
+  .field {
+    margin-bottom: 4px;
+  }
+}
+
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }

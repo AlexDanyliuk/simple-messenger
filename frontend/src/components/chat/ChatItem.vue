@@ -181,4 +181,77 @@ export default {
   justify-content: center;
   padding: 0 5px;
 }
+
+@media (max-width: 768px) {
+  .chat-item {
+    padding: 10px 16px;
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 14px;
+  }
+
+  .name {
+    font-size: 13px;
+  }
+
+  .preview {
+    font-size: 11px;
+  }
+
+  .msg-time,
+  .meta-status {
+    font-size: 10px;
+  }
+
+  .unread-badge {
+    min-width: 16px;
+    height: 16px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-item {
+    padding: 8px 12px;
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 12px;
+  }
+
+  .status-dot {
+    width: 10px;
+    height: 10px;
+    border-width: 1.5px;
+  }
+
+  .info {
+    margin-left: 10px;
+  }
+
+  .name {
+    font-size: 12px;
+  }
+
+  .preview {
+    font-size: 10px;
+  }
+
+  .msg-time,
+  .meta-status {
+    font-size: 9px;
+  }
+
+  .unread-badge {
+    min-width: 15px;
+    height: 15px;
+    font-size: 9px;
+    margin-left: 6px;
+  }
+}
 </style>

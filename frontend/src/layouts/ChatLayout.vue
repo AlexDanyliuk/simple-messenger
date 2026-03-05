@@ -1,9 +1,7 @@
 <template>
   <div class="chat-layout">
 
-    <!-- ЛІВА ЧАСТИНА -->
     <aside class="sidebar">
-      <!-- SEARCH BAR -->
       <div class="sidebar-header">
         <div class="search-wrap" :class="{ 'search-active': searchQuery }">
           <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none">
@@ -22,7 +20,6 @@
         </div>
       </div>
 
-      <!-- SEARCH RESULTS -->
       <template v-if="searchQuery">
         <div class="search-results">
           <div v-if="searchLoading" class="search-state">Пошук…</div>
@@ -36,7 +33,6 @@
         </div>
       </template>
 
-      <!-- REGULAR LIST -->
       <template v-else>
         <ChatList
           :chats="users"
@@ -44,7 +40,6 @@
         />
       </template>
 
-      <!-- USER FOOTER -->
       <div class="user-footer" @click="toggleProfile">
         <div class="user-avatar">
           <img v-if="me && me.avatarUrl" :src="me.avatarUrl" class="user-avatar-img" alt="" />
@@ -64,7 +59,6 @@
         </div>
       </div>
 
-      <!-- PROFILE POPUP -->
       <transition name="popup">
         <div class="profile-popup" v-if="showProfile">
           <div class="popup-header">
@@ -99,7 +93,6 @@
       </transition>
     </aside>
 
-    <!-- ПРАВА ЧАСТИНА -->
     <main class="chat-content" @click="closeProfile">
       <router-view />
     </main>
@@ -142,9 +135,9 @@ export default {
     this.me = profileRes.data;
 
     const res = await api.get("/user/conversations");
-    this.users = res.data;
+    // Фільтруємо себе зі списку розмов
+    this.users = res.data.filter(u => String(u.id) !== String(this.me?.id));
 
-    // підписуємось на статуси
     await connect();
     this.statusSubscription = await subscribe("/topic/status", (update) => {
       this.users = this.users.map(u =>
@@ -154,15 +147,17 @@ export default {
       );
     });
 
-    // підписуємось на нових співрозмовників
     this.conversationSubscription = await subscribe(
       `/topic/conversations/${this.me.id}`,
       (updatedUser) => {
+        // Не додаємо себе до списку розмов
+        if (String(updatedUser.id) === String(this.me?.id)) {
+          return;
+        }
         const idx = this.users.findIndex(u => String(u.id) === String(updatedUser.id));
         if (idx === -1) {
           this.users.unshift(updatedUser);
         } else {
-          // оновлюємо превʼю і переміщуємо нагору списку
           const updated = { ...this.users[idx], ...updatedUser };
           this.users.splice(idx, 1);
           this.users.unshift(updated);
@@ -170,7 +165,6 @@ export default {
       }
     );
 
-    // Close popup on outside click
     document.addEventListener("mousedown", this.handleOutsideClick);
   },
 
@@ -186,6 +180,10 @@ export default {
 
   methods: {
     openChat(userId) {
+      // Перевірка: не дозволяємо вибрати себе
+      if (String(userId) === String(this.me?.id)) {
+        return;
+      }
       this.clearSearch();
       this.$router.push(`/chat/${userId}`);
     },
@@ -270,7 +268,6 @@ export default {
   overflow: hidden;
 }
 
-/* ── SIDEBAR ── */
 .sidebar {
   width: 280px;
   min-width: 280px;
@@ -281,7 +278,6 @@ export default {
   position: relative;
 }
 
-/* ── SIDEBAR HEADER / SEARCH ── */
 .sidebar-header {
   padding: 12px 14px 10px;
   border-bottom: 1px solid #f0f0f0;
@@ -539,7 +535,6 @@ export default {
   background: #fff4f2;
 }
 
-/* ── CHAT CONTENT ── */
 .chat-content {
   flex: 1;
   display: flex;
@@ -548,7 +543,6 @@ export default {
   min-width: 0;
 }
 
-/* ── POPUP ANIMATION ── */
 .popup-enter-active,
 .popup-leave-active {
   transition: opacity 0.15s ease, transform 0.15s ease;
@@ -558,5 +552,143 @@ export default {
 .popup-leave-to {
   opacity: 0;
   transform: scale(0.95) translateY(8px);
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 200px;
+    min-width: 200px;
+    max-height: none;
+    border-right: 1px solid #ebebeb;
+    border-bottom: none;
+    order: initial;
+  }
+
+  .chat-content {
+    order: initial;
+    flex: 1;
+  }
+
+  .search-input {
+    font-size: 12px;
+  }
+
+  .user-footer {
+    padding: 10px 14px;
+  }
+
+  .user-info {
+    display: flex;
+  }
+
+  .user-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 11px;
+  }
+
+  .user-chevron {
+    display: none;
+  }
+
+  .user-name {
+    font-size: 11px;
+  }
+
+  .user-status {
+    font-size: 9px;
+  }
+
+  .profile-popup {
+    bottom: 60px;
+    left: 8px;
+    width: 180px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 120px;
+    min-width: 120px;
+  }
+
+  .sidebar-header {
+    padding: 8px 10px 6px;
+  }
+
+  .search-wrap {
+    padding: 5px 6px;
+  }
+
+  .search-input {
+    font-size: 11px;
+  }
+
+  .search-clear {
+    font-size: 10px;
+  }
+
+  .search-results {
+    padding: 4px 0;
+  }
+
+  .user-footer {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .user-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 10px;
+  }
+
+  .user-name {
+    font-size: 10px;
+  }
+
+  .user-status {
+    font-size: 8px;
+  }
+
+  .status-dot {
+    width: 5px;
+    height: 5px;
+  }
+
+  .search-state {
+    padding: 12px;
+    font-size: 10px;
+  }
+
+  .profile-popup {
+    bottom: 50px;
+    left: 4px;
+    width: 160px;
+  }
+
+  .popup-header {
+    padding: 10px;
+  }
+
+  .popup-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .popup-name {
+    font-size: 11px;
+  }
+
+  .popup-email {
+    font-size: 9px;
+  }
+
+  .popup-item {
+    padding: 8px 8px;
+    font-size: 10px;
+    gap: 6px;
+  }
 }
 </style>

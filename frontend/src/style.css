@@ -62,3 +62,16 @@ button {
 input {
   font-family: inherit;
 }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  :root {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    font-size: 13px;
+  }
+}

@@ -93,4 +93,57 @@ export default {
   color: #cccccc;
   white-space: nowrap;
 }
+
+@media (max-width: 768px) {
+  .chat-head {
+    padding: 0 16px;
+    height: 56px;
+    gap: 10px;
+  }
+
+  .chat-head__avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+
+  .chat-head__title {
+    font-size: 14px;
+  }
+
+  .chat-head__sub {
+    font-size: 11px;
+  }
+
+  .chat-head__hint {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-head {
+    padding: 0 12px;
+    height: 52px;
+    gap: 8px;
+  }
+
+  .chat-head__avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+  }
+
+  .chat-head__title {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .chat-head__sub {
+    font-size: 10px;
+  }
+
+  .chat-head__hint {
+    display: none;
+  }
+}
 </style>

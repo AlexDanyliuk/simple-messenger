@@ -91,4 +91,49 @@ button {
 button:hover {
   opacity: 0.4;
 }
+
+@media (max-width: 768px) {
+  .input-area {
+    padding: 12px 18px;
+    gap: 10px;
+  }
+
+  input {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  button {
+    font-size: 12px;
+    letter-spacing: 0.5px;
+  }
+
+  .clip-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .input-area {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  input {
+    padding: 9px 14px;
+    border-radius: 18px;
+    font-size: 12px;
+  }
+
+  button {
+    font-size: 11px;
+    letter-spacing: 0;
+  }
+
+  .clip-icon svg {
+    width: 15px;
+    height: 15px;
+  }
+}
 </style>
