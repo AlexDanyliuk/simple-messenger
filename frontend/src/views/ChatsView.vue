@@ -24,7 +24,8 @@ export default {
       users: [],
       me: null,
       statusSubscription: null,
-      conversationSubscription: null
+      conversationSubscription: null,
+      typingTimers: {}
     };
   },
 
@@ -32,13 +33,11 @@ export default {
     const profileRes = await api.get("/user/profile");
     this.me = profileRes.data;
 
-    // ✅ /conversations повертає юзерів з lastMessage та unreadCount
     const usersRes = await api.get("/user/conversations");
     this.users = usersRes.data;
 
     await connect();
 
-    // Підписка на статуси в реальному часі
     this.statusSubscription = await subscribe(
       "/topic/status",
       (update) => {
@@ -50,7 +49,6 @@ export default {
       }
     );
 
-    // Підписка на оновлення розмов (lastMessage, unreadCount)
     this.conversationSubscription = await subscribe(
       `/topic/conversations/${this.me.id}`,
       (updatedUser) => {
@@ -58,7 +56,6 @@ export default {
         if (exists) {
           this.users = this.users.map(u => {
             if (String(u.id) !== String(updatedUser.id)) return u;
-            // Мержимо тільки non-null поля, щоб не затерти lastMessage
             const merged = { ...u };
             Object.keys(updatedUser).forEach(key => {
               if (updatedUser[key] !== null && updatedUser[key] !== undefined) {
@@ -68,11 +65,24 @@ export default {
             return merged;
           });
         } else {
-          // Новий співрозмовник якого ще немає в списку — додаємо
           this.users = [updatedUser, ...this.users];
         }
-
-        // Сортуємо за часом останнього повідомлення
+        // Handle typing flag: auto-clear after 4s if received
+        if (updatedUser.typing) {
+          const userId = updatedUser.id;
+          if (this.typingTimers[userId]) clearTimeout(this.typingTimers[userId]);
+          this.typingTimers[userId] = setTimeout(() => {
+            this.users = this.users.map(u => String(u.id) === String(userId) ? { ...u, typing: false } : u);
+            delete this.typingTimers[userId];
+          }, 4000);
+        } else if (updatedUser.typing === false) {
+          // clear any existing timer
+          const userId = updatedUser.id;
+          if (this.typingTimers[userId]) {
+            clearTimeout(this.typingTimers[userId]);
+            delete this.typingTimers[userId];
+          }
+        }
         this.users = [...this.users].sort((a, b) => {
           if (!a.lastMessageTime) return 1;
           if (!b.lastMessageTime) return -1;

@@ -6,12 +6,20 @@
     </div>
     <div class="chat-head__info">
       <div class="chat-head__title">{{ recipient ? recipient.username : '...' }}</div>
-      <div
-        class="chat-head__sub"
-        :class="recipient && recipient.status === 'ONLINE' ? 'status-online' : 'status-offline'"
-      >
-        {{ recipient ? (recipient.status === 'ONLINE' ? 'В мережі' : 'Не в мережі') : '' }}
-      </div>
+      <transition name="typing-fade" mode="out-in">
+        <div v-if="isTyping" class="chat-head__sub typing-indicator" key="typing">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          друкує...
+        </div>
+        <div
+          v-else
+          class="chat-head__sub"
+          :class="recipient && recipient.status === 'ONLINE' ? 'status-online' : 'status-offline'"
+          key="status"
+        >
+          {{ recipient ? (recipient.status === 'ONLINE' ? 'В мережі' : 'Не в мережі') : '' }}
+        </div>
+      </transition>
     </div>
     <div class="chat-head__hint">переглянути профіль</div>
   </div>
@@ -22,7 +30,8 @@ export default {
   name: 'ChatHead',
   props: {
     recipient: { type: Object, default: null },
-    recipientInitial: { type: String, default: '?' }
+    recipientInitial: { type: String, default: '?' },
+    isTyping: { type: Boolean, default: false }
   },
   emits: ['click']
 };
@@ -93,6 +102,32 @@ export default {
   color: #cccccc;
   white-space: nowrap;
 }
+
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #4caf50;
+  font-size: 12px;
+}
+
+.dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #4caf50;
+  animation: blink 1.2s infinite;
+}
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes blink {
+  0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+  40%           { opacity: 1;   transform: scale(1); }
+}
+
+.typing-fade-enter-active, .typing-fade-leave-active { transition: opacity 0.15s; }
+.typing-fade-enter-from, .typing-fade-leave-to { opacity: 0; }
 
 @media (max-width: 768px) {
   .chat-head {

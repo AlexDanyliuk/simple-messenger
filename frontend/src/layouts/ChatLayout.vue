@@ -13,7 +13,7 @@
             v-model="searchQuery"
             class="search-input"
             type="text"
-            placeholder="Пошук користувачів…"
+            placeholder="Введіть 4+ букви для пошуку…"
             @input="onSearchInput"
           />
           <button v-if="searchQuery" class="search-clear" @click="clearSearch">✕</button>
@@ -116,6 +116,7 @@ export default {
       showProfile: false,
       statusSubscription: null,
       conversationSubscription: null,
+      typingTimers: {},
       searchQuery: "",
       searchResults: [],
       searchLoading: false,
@@ -135,7 +136,6 @@ export default {
     this.me = profileRes.data;
 
     const res = await api.get("/user/conversations");
-    // Фільтруємо себе зі списку розмов
     this.users = res.data.filter(u => String(u.id) !== String(this.me?.id));
 
     await connect();
@@ -150,7 +150,6 @@ export default {
     this.conversationSubscription = await subscribe(
       `/topic/conversations/${this.me.id}`,
       (updatedUser) => {
-        // Не додаємо себе до списку розмов
         if (String(updatedUser.id) === String(this.me?.id)) {
           return;
         }
@@ -161,6 +160,21 @@ export default {
           const updated = { ...this.users[idx], ...updatedUser };
           this.users.splice(idx, 1);
           this.users.unshift(updated);
+        }
+        // Handle typing flag: auto-clear after 4s
+        if (updatedUser.typing) {
+          const userId = updatedUser.id;
+          if (this.typingTimers[userId]) clearTimeout(this.typingTimers[userId]);
+          this.typingTimers[userId] = setTimeout(() => {
+            this.users = this.users.map(u => String(u.id) === String(userId) ? { ...u, typing: false } : u);
+            delete this.typingTimers[userId];
+          }, 4000);
+        } else if (updatedUser.typing === false) {
+          const userId = updatedUser.id;
+          if (this.typingTimers[userId]) {
+            clearTimeout(this.typingTimers[userId]);
+            delete this.typingTimers[userId];
+          }
         }
       }
     );
@@ -180,7 +194,6 @@ export default {
 
   methods: {
     openChat(userId) {
-      // Перевірка: не дозволяємо вибрати себе
       if (String(userId) === String(this.me?.id)) {
         return;
       }
@@ -190,8 +203,9 @@ export default {
 
     onSearchInput() {
       clearTimeout(this.searchTimeout);
-      if (!this.searchQuery.trim()) {
+      if (this.searchQuery.trim().length < 4) {
         this.searchResults = [];
+        this.searchLoading = false;
         return;
       }
       this.searchLoading = true;
@@ -247,7 +261,6 @@ export default {
       try {
         await api.post("/user/logout");
       } catch (e) {
-        // виходимо в будь-якому випадку
       } finally {
         disconnect();
         localStorage.removeItem("token");
@@ -356,7 +369,6 @@ export default {
   color: #aaa;
 }
 
-/* ── USER FOOTER ── */
 .user-footer {
   display: flex;
   align-items: center;
@@ -434,7 +446,6 @@ export default {
   flex-shrink: 0;
 }
 
-/* ── PROFILE POPUP ── */
 .profile-popup {
   position: absolute;
   bottom: 70px;

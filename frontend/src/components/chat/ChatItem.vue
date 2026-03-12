@@ -17,7 +17,12 @@
         </div>
       </div>
       <div class="preview-row">
-        <div class="preview" :class="{ unread: hasUnread }">{{ chat.lastMessage || '&nbsp;' }}</div>
+        <div class="preview" :class="{ unread: hasUnread }">
+          <template v-if="isTyping">
+            <span class="typing-dots"><span></span><span></span><span></span></span> друкує...
+          </template>
+          <template v-else>{{ chat.lastMessage || '\u00A0' }}</template>
+        </div>
         <div class="unread-badge" v-if="hasUnread">{{ chat.unreadCount }}</div>
       </div>
     </div>
@@ -34,6 +39,10 @@ export default {
     },
     hasUnread() {
       return this.chat.unreadCount > 0;
+    }
+    ,
+    isTyping() {
+      return this.chat.typing === true;
     }
   },
 
@@ -180,6 +189,29 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 0 5px;
+}
+
+.typing-dots {
+  display: inline-flex;
+  gap: 4px;
+  margin-right: 8px;
+}
+.typing-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4caf50;
+  display: inline-block;
+  opacity: 0.3;
+  transform: scale(0.8);
+  animation: chat-dot 1.2s infinite;
+}
+.typing-dots span:nth-child(2) { animation-delay: 0.2s }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s }
+
+@keyframes chat-dot {
+  0%,80%,100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
 }
 
 @media (max-width: 768px) {

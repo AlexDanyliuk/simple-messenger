@@ -63,7 +63,6 @@ input {
   font-family: inherit;
 }
 
-/* ── RESPONSIVE ── */
 @media (max-width: 768px) {
   :root {
     font-size: 14px;

@@ -1,7 +1,6 @@
 <template>
   <div class="page">
 
-    <!-- TOP BAR -->
     <div class="topbar">
       <button class="back-btn" @click="$router.push('/chats')">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -13,10 +12,8 @@
       </button>
     </div>
 
-    <!-- CARD -->
     <div class="card">
 
-      <!-- AVATAR + NAME -->
       <div class="avatar-section">
         <div class="avatar-wrap" @click="pickAvatar" title="Змінити аватарку">
           <img v-if="avatarPreview || user.avatarUrl"
@@ -45,7 +42,6 @@
         <div class="avatar-email">{{ user.email || '' }}</div>
       </div>
 
-      <!-- FORM -->
       <div class="form-section" v-if="!loading">
         <div class="field">
           <label>Імʼя користувача</label>
@@ -88,7 +84,6 @@
 
       <div class="loading" v-if="loading">Завантаження...</div>
 
-      <!-- LOGOUT — at the very bottom of card -->
       <div class="logout-area">
         <button class="btn-logout" @click="logout">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
@@ -211,7 +206,6 @@ export default {
       try {
         await api.post("/user/logout");
       } catch (e) {
-        // навіть якщо запит впав — все одно виходимо
       } finally {
         disconnect();
         localStorage.removeItem("token");
@@ -263,7 +257,6 @@ export default {
 </script>
 
 <style scoped>
-/* ── PAGE ── */
 .page {
   min-height: 100vh;
   background: #f7f7f7;
@@ -274,7 +267,6 @@ export default {
   font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* ── TOP BAR ── */
 .topbar {
   width: 100%;
   max-width: 440px;
@@ -301,7 +293,6 @@ export default {
   color: #111;
 }
 
-/* ── CARD ── */
 .card {
   width: 100%;
   max-width: 440px;
@@ -313,7 +304,6 @@ export default {
   flex-direction: column;
 }
 
-/* ── AVATAR SECTION ── */
 .avatar-section {
   display: flex;
   flex-direction: column;
@@ -411,7 +401,6 @@ export default {
   color: #aaa;
 }
 
-/* ── FORM SECTION ── */
 .form-section {
   padding: 28px 36px 4px;
   display: flex;
@@ -517,7 +506,6 @@ input:disabled {
   background: #fff5f5 !important;
 }
 
-/* ── LOGOUT — pinned to bottom of card ── */
 .logout-area {
   padding: 24px 36px 28px;
   border-top: 1px solid #f0f0f0;

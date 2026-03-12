@@ -59,7 +59,35 @@ export function sendMessage(payload) {
   });
 }
 
-// Викликати тільки при logout
+export function sendTyping(payload) {
+  if (!connected) return;
+  stompClient.publish({
+    destination: "/app/chat.typing",
+    body: JSON.stringify(payload)
+  });
+}
+
+/**
+ * Notify the server that the current user has read messages sent by payload.senderId.
+ * payload: { senderId: Number }
+ */
+export function sendRead(payload) {
+  if (!connected) return;
+  stompClient.publish({
+    destination: "/app/chat.read",
+    body: JSON.stringify(payload)
+  });
+}
+
+/** payload: { messageId: Number, content: String } */
+export function sendEdit(payload) {
+  if (!connected) return;
+  stompClient.publish({
+    destination: "/app/chat.edit",
+    body: JSON.stringify(payload)
+  });
+}
+
 export function disconnect() {
   if (stompClient) {
     stompClient.deactivate();

@@ -145,8 +145,6 @@ export default {
         this.$router.push("/login");
       } catch (err) {
         const msg = (err.response?.data?.message || "").toLowerCase();
-        
-        // Якщо це помилка валідації (400), показуємо повідомлення з backend
         if (err.response?.status === 400) {
           this.serverError = err.response?.data?.message || "Невірні дані. Перевірте введення.";
         } else if (msg.includes("username") || (msg.includes("user") && msg.includes("exist"))) {

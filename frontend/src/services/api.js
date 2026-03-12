@@ -12,12 +12,10 @@ api.interceptors.request.use(config => {
   return config;
 });
 
-// Обробка помилок 401 і 403
 api.interceptors.response.use(
   response => response,
   error => {
     if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-      // Видаляємо токен та перенаправляємо на login
       localStorage.removeItem("token");
       window.location.href = "/login";
     }

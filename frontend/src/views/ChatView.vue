@@ -3,6 +3,7 @@
     <ChatHead
       :recipient="recipient"
       :recipient-initial="recipientInitial"
+      :is-typing="recipientTyping"
       @click="showModal = true"
     />
 
@@ -17,15 +18,16 @@
       ref="messageList"
       :messages="messages"
       :current-user-id="currentUserId"
+      @edit="onEdit"
     />
 
-    <ChatComposer @send="send" />
+    <ChatComposer @send="send" @typing="onTyping" />
   </div>
 </template>
 
 <script>
 import api from '../services/api';
-import { connect, subscribe, sendMessage as wsSend } from '../services/websocket';
+import { connect, subscribe, sendMessage as wsSend, sendTyping, sendRead, sendEdit } from '../services/websocket';
 import ChatHead from '../components/chat/ChatHead.vue';
 import ProfileModal from '../components/chat/ProfileModal.vue';
 import MessageList from '../components/chat/MessageList.vue';
@@ -42,7 +44,12 @@ export default {
       recipient: null,
       subscription: null,
       statusSubscription: null,
-      showModal: false
+      typingSubscription: null,
+      messageStatusSubscription: null,
+      editSubscription: null,
+      showModal: false,
+      recipientTyping: false,
+      typingClearTimer: null
     };
   },
 
@@ -65,29 +72,31 @@ export default {
 
     this.recipientId = Number(this.$route.params.id);
 
-    // Перевірка: не дозволяємо чат з собою
     if (this.currentUserId === this.recipientId) {
       this.$router.replace('/chats');
       return;
     }
 
     await this.loadRecipient();
-    
-    // Якщо користувач не існує - перенаправляємо на /chats
     if (!this.recipient) {
       this.$router.replace('/chats');
       return;
     }
 
     await this.loadMessages();
+    await this.initSocket();
     await this.markAsRead();
-    this.initSocket();
     this.$nextTick(() => this.$refs.messageList?.scrollDown());
   },
 
   beforeUnmount() {
     this.subscription?.unsubscribe();
     this.statusSubscription?.unsubscribe();
+    this.typingSubscription?.unsubscribe();
+    this.messageStatusSubscription?.unsubscribe();
+    this.editSubscription?.unsubscribe();
+    clearTimeout(this.typingClearTimer);
+    if (this.recipientId) sendTyping({ recipientId: this.recipientId, typing: false });
   },
 
   methods: {
@@ -107,13 +116,9 @@ export default {
       this.$nextTick(() => this.$refs.messageList?.scrollDown());
     },
 
-    // позначає всі повідомлення від recipientId до currentUserId як прочитані
     async markAsRead() {
-      try {
-        await api.post(`/messages/${this.recipientId}/${this.currentUserId}/read`);
-      } catch {
-        // ігноруємо помилку якщо немає повідомлень
-      }
+      if (!this.recipientId) return;
+      sendRead({ senderId: this.recipientId });
     },
 
     async initSocket() {
@@ -129,6 +134,16 @@ export default {
 
       const chatId = [this.currentUserId, this.recipientId].sort().join('_');
 
+      this.typingSubscription = await subscribe(`/topic/typing/${chatId}`, (data) => {
+        if (String(data.senderId) === String(this.recipientId)) {
+          this.recipientTyping = data.typing;
+          clearTimeout(this.typingClearTimer);
+          if (data.typing) {
+            this.typingClearTimer = setTimeout(() => { this.recipientTyping = false; }, 4000);
+          }
+        }
+      });
+
       this.subscription = await subscribe(`/topic/chat/${chatId}`, (incoming) => {
         const isThisChat =
           (incoming.senderId === this.currentUserId && incoming.recipientId === this.recipientId) ||
@@ -138,16 +153,44 @@ export default {
           this.messages.push(incoming);
           this.$nextTick(() => this.$refs.messageList?.scrollDown());
 
-          // якщо нове повідомлення від співрозмовника — одразу позначаємо як прочитане
           if (incoming.senderId === this.recipientId) {
             this.markAsRead();
           }
         }
       });
+
+      this.messageStatusSubscription = await subscribe(`/topic/message-status/${chatId}`, (update) => {
+        const now = new Date().toISOString();
+        this.messages = this.messages.map(m => {
+          if (Number(m.senderId) !== Number(update.senderId)) return m;
+          if (update.status === 'DELIVERED' && !m.deliveredAt) {
+            return { ...m, deliveredAt: now };
+          }
+          if (update.status === 'READ') {
+            return { ...m, deliveredAt: m.deliveredAt || now, readAt: m.readAt || now };
+          }
+          return m;
+        });
+      });
+
+      this.editSubscription = await subscribe(`/topic/chat-edit/${chatId}`, (updated) => {
+        this.messages = this.messages.map(m =>
+          Number(m.id) === Number(updated.id)
+            ? { ...m, content: updated.content, editedAt: updated.editedAt }
+            : m
+        );
+      });
     },
 
     send(msg) {
       wsSend({ recipientId: this.recipientId, content: msg });
+    },
+
+    onTyping(isTyping) {
+      sendTyping({ recipientId: this.recipientId, typing: isTyping });
+    },
+    onEdit(payload) {
+      sendEdit(payload);
     }
   },
 
@@ -157,6 +200,11 @@ export default {
         if (!newId) return;
 
         this.subscription?.unsubscribe();
+        this.typingSubscription?.unsubscribe();
+        this.messageStatusSubscription?.unsubscribe();
+        this.editSubscription?.unsubscribe();
+        clearTimeout(this.typingClearTimer);
+        this.recipientTyping = false;
 
         this.recipientId = Number(newId);
         this.messages = [];
@@ -164,8 +212,8 @@ export default {
 
         await this.loadRecipient();
         await this.loadMessages();
+        await this.initSocket();
         await this.markAsRead();
-        this.initSocket();
       }
     }
   }

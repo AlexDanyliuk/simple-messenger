@@ -4,6 +4,8 @@
       v-model="text"
       placeholder="Написати повідомлення…"
       @keyup.enter="send"
+      @input="onInput"
+      @blur="stopTyping"
     />
     <button @click="send">Надіслати</button>
   </div>
@@ -12,9 +14,9 @@
 <script>
 export default {
   name: 'ChatComposer',
-  emits: ['send'],
+  emits: ['send', 'typing'],
   data() {
-    return { text: '' };
+    return { text: '', typingTimeout: null };
   },
   methods: {
     send() {
@@ -22,6 +24,16 @@ export default {
       if (!msg) return;
       this.$emit('send', msg);
       this.text = '';
+      this.stopTyping();
+    },
+    onInput() {
+      this.$emit('typing', true);
+      clearTimeout(this.typingTimeout);
+      this.typingTimeout = setTimeout(() => this.stopTyping(), 2000);
+    },
+    stopTyping() {
+      clearTimeout(this.typingTimeout);
+      this.$emit('typing', false);
     }
   }
 };
