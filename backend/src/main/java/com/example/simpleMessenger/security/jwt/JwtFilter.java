@@ -1,5 +1,6 @@
 package com.example.simpleMessenger.security.jwt;
 
+import com.example.simpleMessenger.security.AuthCookieService;
 import com.example.simpleMessenger.security.CustomUserDetails;
 import com.example.simpleMessenger.security.CustomUserServiceImpl;
 import jakarta.servlet.FilterChain;
@@ -21,6 +22,7 @@ import java.io.IOException;
 public class JwtFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final CustomUserServiceImpl customUserService;
+    private final AuthCookieService authCookieService;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
@@ -47,6 +49,6 @@ public class JwtFilter extends OncePerRequestFilter {
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }
-        return null;
+        return authCookieService.extractAccessToken(request);
     }
 }

@@ -19,8 +19,18 @@ public class UserRegisterDto {
 
     @NotBlank(message = "Username is required")
     @Size(min = 3, max = 20, message = "Username must be between 3 and 20 characters")
+        @Pattern(
+            regexp = "^[A-Za-z]+$",
+            message = "Ім'я користувача має містити тільки англійські літери"
+        )
     private String username;
 
+        @NotBlank(message = "Full name is required")
+        @Size(min = 2, max = 50, message = "Full name must be between 2 and 50 characters")
+        @Pattern(
+            regexp = "^[A-Za-z]+(?:[ '-][A-Za-z]+)*$",
+            message = "Повне ім'я має містити тільки англійські літери"
+        )
     private String fullName;
 
     @NotBlank(message = "Password is required")

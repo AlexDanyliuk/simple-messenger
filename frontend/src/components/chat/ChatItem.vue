@@ -65,13 +65,21 @@ export default {
 .chat-item {
   display: flex;
   align-items: center;
-  padding: 12px 20px;
+  padding: 13px 14px;
+  margin-bottom: 6px;
+  border-radius: 18px;
+  border: 1px solid transparent;
+  background: linear-gradient(180deg, #ffffff 0%, #fdfdfd 100%);
+  box-shadow: 0 1px 0 rgba(17, 24, 39, 0.02);
   cursor: pointer;
-  transition: background 0.12s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
 }
 
 .chat-item:hover {
-  background: #f5f5f5;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fafc 100%);
+  border-color: #e6edf5;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+  transform: translateY(-1px);
 }
 
 .avatar-wrap {
@@ -83,7 +91,7 @@ export default {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #111111;
+  background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -91,6 +99,7 @@ export default {
   font-weight: 600;
   font-size: 16px;
   overflow: hidden;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
 }
 
 .avatar-img {
@@ -109,10 +118,11 @@ export default {
   height: 11px;
   border-radius: 50%;
   border: 2px solid #ffffff;
-  transition: background 0.3s ease;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.7);
+  transition: background 0.3s ease, transform 0.3s ease;
 }
 
-.dot-online  { background: #4caf50; }
+.dot-online  { background: #22c55e; animation: status-pulse 2.4s infinite; }
 .dot-offline { background: #cccccc; }
 
 .info {
@@ -129,9 +139,9 @@ export default {
 }
 
 .name {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 14px;
-  color: #111111;
+  color: #0f172a;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -150,7 +160,7 @@ export default {
 
 .msg-time {
   font-size: 11px;
-  color: #bbbbbb;
+  color: #94a3b8;
   flex-shrink: 0;
   margin-left: 6px;
 }
@@ -163,7 +173,7 @@ export default {
 
 .preview {
   font-size: 12px;
-  color: #999999;
+  color: #64748b;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -172,13 +182,13 @@ export default {
 
 .preview.unread {
   font-weight: 700;
-  color: #111111;
+  color: #0f172a;
 }
 
 .unread-badge {
   flex-shrink: 0;
   margin-left: 8px;
-  background: #111111;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   color: #ffffff;
   font-size: 11px;
   font-weight: 600;
@@ -189,6 +199,7 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 0 5px;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.18);
 }
 
 .typing-dots {
@@ -212,6 +223,11 @@ export default {
 @keyframes chat-dot {
   0%,80%,100% { opacity: 0.3; transform: scale(0.8); }
   40% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes status-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.7); }
+  50% { transform: scale(1.08); box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.12); }
 }
 
 @media (max-width: 768px) {

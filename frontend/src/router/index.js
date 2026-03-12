@@ -6,6 +6,14 @@ import ProfileView  from "../views/ProfileView.vue";
 import ChatLayout   from "../layouts/ChatLayout.vue";
 import ChatView     from "../views/ChatView.vue";
 
+async function hasActiveSession() {
+  const response = await fetch("/api/user/profile", {
+    credentials: "include"
+  });
+
+  return response.ok;
+}
+
 const SelectChatPlaceholder = defineComponent({
   render() {
     return h("div", { style: "padding: 20px; color: #aaa; font-size: 14px;" }, "Оберіть чат");
@@ -42,13 +50,10 @@ const router = createRouter({
   routes
 });
 
-function isAuthenticated() {
-  return !!localStorage.getItem("token");
-}
-
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
-  const isLoggedIn = isAuthenticated();
+  const shouldCheckSession = requiresAuth || to.path === "/login" || to.path === "/register";
+  const isLoggedIn = shouldCheckSession ? await hasActiveSession() : false;
 
   if (requiresAuth && !isLoggedIn) {
     next("/login");

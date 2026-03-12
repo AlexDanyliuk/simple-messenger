@@ -1,10 +1,7 @@
 package com.example.simpleMessenger.controller;
 
 import com.example.simpleMessenger.dto.*;
-import com.example.simpleMessenger.entity.Status;
 import com.example.simpleMessenger.entity.User;
-import com.example.simpleMessenger.mapper.UserMapper;
-import com.example.simpleMessenger.repository.UserRepository;
 import com.example.simpleMessenger.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -22,13 +19,9 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
-    private final UserMapper userMapper;
-    private final UserRepository userRepository;
 
-    public UserController(UserService userService, UserMapper userMapper, UserRepository userRepository) {
+    public UserController(UserService userService) {
         this.userService = userService;
-        this.userMapper = userMapper;
-        this.userRepository = userRepository;
     }
 
 
@@ -55,7 +48,7 @@ public class UserController {
     public ResponseEntity<List<UserListDto>> searchUsers(
             @RequestParam String q,
             Principal principal) {
-        if (q == null || q.trim().length() < 4) {
+        if (q == null || q.trim().length() < 3) {
             return ResponseEntity.ok(List.of());
         }
         return ResponseEntity.ok(

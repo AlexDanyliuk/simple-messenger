@@ -7,9 +7,9 @@
         <input
           v-model="username"
           @blur="touch('username')"
-          @input="username = username.toLowerCase()"
+          @input="normalizeUsername"
           type="text"
-          placeholder="Імʼя користувача(наприклад taras)"
+          placeholder="Імʼя користувача, наприклад taras"
           :class="{ 'input-error': errors.username || username.length > 20 }"
         />
         <span v-if="username.length > 20" class="field-error">Максимум 20 символів</span>
@@ -20,8 +20,9 @@
         <input
           v-model="fullName"
           @blur="touch('fullName')"
+          @input="normalizeFullName"
           type="text"
-          placeholder="Повне імʼя(наприклад Тарас Шевченко)"
+          placeholder="Повне імʼя, наприклад Taras Shevchenko"
           :class="{ 'input-error': errors.fullName }"
         />
         <span v-if="errors.fullName" class="field-error">{{ errors.fullName }}</span>
@@ -31,12 +32,13 @@
         <input
           v-model="email"
           @blur="touch('email')"
+          @input="normalizeEmail"
           type="email"
           placeholder="Email"
           :class="{ 'input-error': errors.email }"
         />
         <span v-if="errors.email" class="field-error">{{ errors.email }}</span>
-        <span v-else class="field-hint">Вкажіть дійсну адресу, наприклад user@gmail.com</span>
+        <span v-else class="field-hint">Вкажіть адресу Gmail, наприклад user@gmail.com</span>
       </div>
 
       <div class="field">
@@ -48,7 +50,7 @@
           :class="{ 'input-error': errors.password }"
         />
         <span v-if="errors.password" class="field-error">{{ errors.password }}</span>
-        <span v-else class="field-hint">Не менше 8 символів</span>
+        <span v-else class="field-hint">Мін. 8 символів, велика літера, мала літера і цифра</span>
       </div>
 
       <div class="field">
@@ -90,7 +92,6 @@ export default {
       email: "",
       password: "",
       confirmPassword: "",
-      confirmPassword: "",
       loading: false,
       serverError: "",
       touched: { username: false, fullName: false, email: false, password: false, confirmPassword: false }
@@ -99,22 +100,33 @@ export default {
   computed: {
     errors() {
       const e = {};
+      const username = this.username.trim();
+      const fullName = this.fullName.replace(/\s+/g, " ").trim();
+      const email = this.email.trim().toLowerCase();
       if (this.touched.username) {
-        if (!this.username) e.username = "Введіть імʼя користувача";
-        else if (this.username.length < 3) e.username = "Мінімум 3 символи";
-        else if (this.username.length > 20) e.username = "Максимум 20 символів";
-        else if (!/^[a-z0-9_.]+$/.test(this.username)) e.username = "Лише малі літери, цифри, _ .";
+        if (!username) e.username = "Введіть імʼя користувача";
+        else if (username.length < 3) e.username = "Мінімум 3 символи";
+        else if (username.length > 20) e.username = "Максимум 20 символів";
+        else if (!/^[a-zA-Z]+$/.test(username)) e.username = "Імʼя користувача має містити тільки англійські літери";
       }
       if (this.touched.fullName) {
-        if (!this.fullName.trim()) e.fullName = "Введіть повне імʼя";
+        if (!fullName) e.fullName = "Введіть повне імʼя";
+        else if (fullName.length < 2) e.fullName = "Мінімум 2 символи";
+        else if (fullName.length > 50) e.fullName = "Максимум 50 символів";
+        else if (!/^[a-zA-Z]+(?:[ '-][a-zA-Z]+)*$/.test(fullName)) e.fullName = "Повне імʼя має містити тільки англійські літери";
       }
       if (this.touched.email) {
-        if (!this.email) e.email = "Введіть email";
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) e.email = "Невірний формат email";
+        if (!email) e.email = "Введіть email";
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = "Невірний формат email";
+        else if (!/@gmail\.com$/i.test(email)) e.email = "Використайте адресу Gmail";
       }
       if (this.touched.password) {
         if (!this.password) e.password = "Введіть пароль";
         else if (this.password.length < 8) e.password = "Мінімум 8 символів";
+        else if (!/[A-Z]/.test(this.password)) e.password = "Потрібна хоча б одна велика літера";
+        else if (!/[a-z]/.test(this.password)) e.password = "Потрібна хоча б одна мала літера";
+        else if (!/[0-9]/.test(this.password)) e.password = "Потрібна хоча б одна цифра";
+        else if (/\s/.test(this.password)) e.password = "Пароль не повинен містити пробіли";
       }
       if (this.touched.confirmPassword) {
         if (!this.confirmPassword) e.confirmPassword = "Підтвердіть пароль";
@@ -124,6 +136,15 @@ export default {
     }
   },
   methods: {
+    normalizeUsername() {
+      this.username = this.username.replace(/\s+/g, "");
+    },
+    normalizeFullName() {
+      this.fullName = this.fullName.replace(/\s{2,}/g, " ");
+    },
+    normalizeEmail() {
+      this.email = this.email.trim().toLowerCase();
+    },
     touch(field) {
       this.touched[field] = true;
     },
@@ -137,9 +158,9 @@ export default {
       this.serverError = "";
       try {
         await axios.post("/api/user/registration", {
-          username: this.username,
-          fullName: this.fullName,
-          email: this.email,
+          username: this.username.trim(),
+          fullName: this.fullName.replace(/\s+/g, " ").trim(),
+          email: this.email.trim().toLowerCase(),
           password: this.password
         });
         this.$router.push("/login");
@@ -298,22 +319,35 @@ a:hover {
 }
 
 .input-error {
-  border-color: #e53e3e !important;
-  background: #fff5f5 !important;
+  border-color: #e11d48 !important;
+  background: linear-gradient(180deg, #fff8f8 0%, #fff1f2 100%) !important;
+  box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.08);
 }
 
 .field-error {
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
   font-size: 12px;
-  color: #e53e3e;
-  margin-top: -8px;
+  line-height: 1.45;
+  color: #be123c;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-top: -4px;
   margin-bottom: 10px;
   animation: fadeIn 0.2s ease;
 }
 
 .field-hint {
   font-size: 12px;
-  color: #aaaaaa;
-  margin-top: -8px;
+  color: #667085;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-top: -4px;
   margin-bottom: 10px;
 }
 

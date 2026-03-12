@@ -1,6 +1,7 @@
 package com.example.simpleMessenger.config;
 
 import com.example.simpleMessenger.security.JwtChannelInterceptor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -10,7 +11,11 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 @Configuration
 @EnableWebSocketMessageBroker
+@RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    private final JwtChannelInterceptor jwtChannelInterceptor;
+    private final AuthenticatedUserHandshakeHandler authenticatedUserHandshakeHandler;
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry){
@@ -22,13 +27,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry){
         registry.addEndpoint("/ws")
+                .setHandshakeHandler(authenticatedUserHandshakeHandler)
                 .setAllowedOrigins("http://localhost:5173");
-    }
-
-    private final JwtChannelInterceptor jwtChannelInterceptor;
-
-    public WebSocketConfig(JwtChannelInterceptor jwtChannelInterceptor) {
-        this.jwtChannelInterceptor = jwtChannelInterceptor;
     }
 
     @Override

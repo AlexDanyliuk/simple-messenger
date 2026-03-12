@@ -53,20 +53,21 @@ export default {
       `/topic/conversations/${this.me.id}`,
       (updatedUser) => {
         const exists = this.users.some(u => String(u.id) === String(updatedUser.id));
-        if (exists) {
-          this.users = this.users.map(u => {
-            if (String(u.id) !== String(updatedUser.id)) return u;
-            const merged = { ...u };
-            Object.keys(updatedUser).forEach(key => {
-              if (updatedUser[key] !== null && updatedUser[key] !== undefined) {
-                merged[key] = updatedUser[key];
-              }
-            });
-            return merged;
-          });
-        } else {
-          this.users = [updatedUser, ...this.users];
+        if (!exists) {
+          return;
         }
+
+        this.users = this.users.map(u => {
+          if (String(u.id) !== String(updatedUser.id)) return u;
+          const merged = { ...u };
+          Object.keys(updatedUser).forEach(key => {
+            if (updatedUser[key] !== null && updatedUser[key] !== undefined) {
+              merged[key] = updatedUser[key];
+            }
+          });
+          return merged;
+        });
+
         // Handle typing flag: auto-clear after 4s if received
         if (updatedUser.typing) {
           const userId = updatedUser.id;

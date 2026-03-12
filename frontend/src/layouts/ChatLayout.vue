@@ -13,7 +13,7 @@
             v-model="searchQuery"
             class="search-input"
             type="text"
-            placeholder="Введіть 4+ букви для пошуку…"
+            placeholder="Пошук"
             @input="onSearchInput"
           />
           <button v-if="searchQuery" class="search-clear" @click="clearSearch">✕</button>
@@ -22,7 +22,8 @@
 
       <template v-if="searchQuery">
         <div class="search-results">
-          <div v-if="searchLoading" class="search-state">Пошук…</div>
+          <div v-if="!isSearchReady" class="search-state">Введіть щонайменше 3 символи</div>
+          <div v-else-if="searchLoading" class="search-state">Пошук…</div>
           <div v-else-if="searchResults.length === 0" class="search-state">Користувачів не знайдено</div>
           <ChatItem
             v-for="user in searchResults"
@@ -125,6 +126,9 @@ export default {
   },
 
   computed: {
+    isSearchReady() {
+      return this.searchQuery.trim().length >= 3;
+    },
     meInitial() {
       if (!this.me || !this.me.username) return "?";
       return this.me.username.charAt(0).toUpperCase();
@@ -155,12 +159,13 @@ export default {
         }
         const idx = this.users.findIndex(u => String(u.id) === String(updatedUser.id));
         if (idx === -1) {
-          this.users.unshift(updatedUser);
-        } else {
-          const updated = { ...this.users[idx], ...updatedUser };
-          this.users.splice(idx, 1);
-          this.users.unshift(updated);
+          return;
         }
+
+        const updated = { ...this.users[idx], ...updatedUser };
+        this.users.splice(idx, 1);
+        this.users.unshift(updated);
+
         // Handle typing flag: auto-clear after 4s
         if (updatedUser.typing) {
           const userId = updatedUser.id;
@@ -203,7 +208,7 @@ export default {
 
     onSearchInput() {
       clearTimeout(this.searchTimeout);
-      if (this.searchQuery.trim().length < 4) {
+      if (!this.isSearchReady) {
         this.searchResults = [];
         this.searchLoading = false;
         return;
@@ -259,12 +264,10 @@ export default {
 
     async logout() {
       try {
-        await api.post("/user/logout");
+        await api.post("/auth/logout");
       } catch (e) {
       } finally {
         disconnect();
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
         this.$router.replace("/login");
       }
     }
@@ -277,40 +280,45 @@ export default {
   display: flex;
   height: 100vh;
   background: #ffffff;
-  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: inherit;
   overflow: hidden;
 }
 
 .sidebar {
   width: 280px;
   min-width: 280px;
-  background: #ffffff;
-  border-right: 1px solid #ebebeb;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  border-right: 1px solid #e8eef5;
   display: flex;
   flex-direction: column;
   position: relative;
+  box-shadow: 10px 0 30px rgba(15, 23, 42, 0.035);
 }
 
 .sidebar-header {
   padding: 12px 14px 10px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #eef2f7;
   flex-shrink: 0;
+  backdrop-filter: blur(12px);
 }
 
 .search-wrap {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #f5f5f5;
-  border-radius: 10px;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
   padding: 7px 10px;
-  transition: background 0.15s, box-shadow 0.15s;
+  transition: background 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
 }
 
 .search-wrap.search-active,
 .search-wrap:focus-within {
-  background: #f0f0f0;
-  box-shadow: 0 0 0 2px #e0e0e0;
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07), 0 0 0 4px rgba(148, 163, 184, 0.12);
+  transform: translateY(-1px);
 }
 
 .search-icon {
@@ -363,34 +371,35 @@ export default {
 }
 
 .search-state {
-  padding: 20px;
+  padding: 22px 20px;
   text-align: center;
   font-size: 13px;
-  color: #aaa;
+  color: #94a3b8;
 }
 
 .user-footer {
   display: flex;
   align-items: center;
   padding: 14px 18px;
-  border-top: 1px solid #ebebeb;
+  border-top: 1px solid #e8eef5;
   cursor: pointer;
-  transition: background 0.12s;
+  transition: background 0.18s ease, transform 0.18s ease;
   flex-shrink: 0;
   gap: 10px;
-  background: #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
   user-select: none;
 }
 
 .user-footer:hover {
-  background: #f7f7f7;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fafc 100%);
+  transform: translateY(-1px);
 }
 
 .user-avatar {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #111111;
+  background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -399,6 +408,7 @@ export default {
   font-size: 14px;
   flex-shrink: 0;
   overflow: hidden;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.16);
 }
 
 .user-avatar-img {
@@ -451,12 +461,12 @@ export default {
   bottom: 70px;
   left: 12px;
   width: 244px;
-  background: #ffffff;
-  border-radius: 14px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.06);
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  border-radius: 18px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.16), 0 4px 14px rgba(15, 23, 42, 0.08);
   z-index: 200;
   overflow: hidden;
-  border: 1px solid #ebebeb;
+  border: 1px solid #e8eef5;
   transform-origin: bottom left;
 }
 

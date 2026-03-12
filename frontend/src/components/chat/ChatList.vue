@@ -1,12 +1,12 @@
 <template>
-  <div class="chat-list">
+  <transition-group name="chat-list" tag="div" class="chat-list">
     <ChatItem
       v-for="chat in chats"
       :key="chat.id"
       :chat="chat"
       @click="$emit('select', chat.id)"
     />
-  </div>
+  </transition-group>
 </template>
 
 <script>
@@ -78,7 +78,7 @@ export default {
 .chat-list {
   flex: 1;
   overflow-y: auto;
-  padding: 8px 0;
+  padding: 10px 10px 14px;
 }
 
 .chat-list::-webkit-scrollbar {
@@ -92,5 +92,20 @@ export default {
 .chat-list::-webkit-scrollbar-thumb {
   background: #e0e0e0;
   border-radius: 4px;
+}
+
+.chat-list-enter-active,
+.chat-list-leave-active {
+  transition: opacity 0.24s ease, transform 0.24s ease;
+}
+
+.chat-list-move {
+  transition: transform 0.26s ease;
+}
+
+.chat-list-enter-from,
+.chat-list-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
 }
 </style>

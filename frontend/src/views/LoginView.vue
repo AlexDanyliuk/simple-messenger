@@ -7,12 +7,13 @@
         <input
           v-model="email"
           @blur="touch('email')"
+          @input="normalizeEmail"
           type="email"
           placeholder="Email"
           :class="{ 'input-error': errors.email }"
         />
         <span v-if="errors.email" class="field-error">{{ errors.email }}</span>
-        <span v-else class="field-hint">Вкажіть дійсну адресу, наприклад user@gmail.com</span>
+        <span v-else class="field-hint">Дозволена тільки адреса Gmail, наприклад user@gmail.com</span>
       </div>
 
       <div class="field">
@@ -60,17 +61,23 @@ export default {
   computed: {
     errors() {
       const e = {};
+      const email = this.email.trim().toLowerCase();
       if (this.touched.email) {
-        if (!this.email) e.email = "Введіть email";
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) e.email = "Невірний формат email";
+        if (!email) e.email = "Введіть email";
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = "Невірний формат email";
+        else if (!/@gmail\.com$/i.test(email)) e.email = "Дозволена тільки пошта @gmail.com";
       }
       if (this.touched.password) {
         if (!this.password) e.password = "Введіть пароль";
+        else if (!this.password.trim()) e.password = "Пароль не може складатися лише з пробілів";
       }
       return e;
     }
   },
   methods: {
+    normalizeEmail() {
+      this.email = this.email.trim().toLowerCase();
+    },
     touch(field) {
       this.touched[field] = true;
     },
@@ -83,11 +90,12 @@ export default {
       this.loading = true;
       this.serverError = "";
       try {
-        const response = await axios.post("/api/auth/sign-in", {
-          email: this.email,
+        await axios.post("/api/auth/sign-in", {
+          email: this.email.trim().toLowerCase(),
           password: this.password
+        }, {
+          withCredentials: true
         });
-        localStorage.setItem("token", response.data.token);
         this.$router.push("/chats");
       } catch (err) {
         this.serverError = err.response?.data?.message || "Невірний email або пароль";
@@ -233,22 +241,35 @@ a:hover {
 }
 
 .input-error {
-  border-color: #e53e3e !important;
-  background: #fff5f5 !important;
+  border-color: #e11d48 !important;
+  background: linear-gradient(180deg, #fff8f8 0%, #fff1f2 100%) !important;
+  box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.08);
 }
 
 .field-error {
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
   font-size: 12px;
-  color: #e53e3e;
-  margin-top: -8px;
+  line-height: 1.45;
+  color: #be123c;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-top: -4px;
   margin-bottom: 10px;
   animation: fadeIn 0.2s ease;
 }
 
 .field-hint {
   font-size: 12px;
-  color: #aaaaaa;
-  margin-top: -8px;
+  color: #667085;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-top: -4px;
   margin-bottom: 10px;
 }
 

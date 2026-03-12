@@ -9,16 +9,11 @@ export function connect() {
     return connectPromise;
   }
 
-  const token = localStorage.getItem("token");
-
   const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   const brokerURL = `${wsProtocol}//${window.location.host}/ws`;
 
   stompClient = new Client({
     brokerURL,
-    connectHeaders: {
-      Authorization: "Bearer " + token
-    },
     reconnectDelay: 5000,
 
     onDisconnect: () => {

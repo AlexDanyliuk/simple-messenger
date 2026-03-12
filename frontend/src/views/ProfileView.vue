@@ -48,8 +48,8 @@
           <input
             v-model="user.username"
             @blur="touch('username')"
-            @input="user.username = user.username.toLowerCase()"
-            placeholder="Імʼя користувача"
+            @input="normalizeUsername"
+            placeholder="Імʼя користувача, наприклад taras"
             :class="{ 'input-error': errors.username || user.username.length > 20 }"
           />
           <span v-if="user.username.length > 20" class="field-error">Максимум 20 символів</span>
@@ -60,7 +60,8 @@
           <input
             v-model="user.fullName"
             @blur="touch('fullName')"
-            placeholder="Повне імʼя"
+            @input="normalizeFullName"
+            placeholder="Повне імʼя, наприклад Taras Shevchenko"
             :class="{ 'input-error': errors.fullName }"
           />
           <span v-if="errors.fullName" class="field-error">{{ errors.fullName }}</span>
@@ -127,23 +128,24 @@ export default {
     },
     errors() {
       const e = {};
+      const username = this.user.username.trim();
+      const fullName = (this.user.fullName || "").replace(/\s+/g, " ").trim();
       if (this.touched.username) {
-        if (!this.user.username) e.username = "Введіть імʼя користувача";
-        else if (this.user.username.length < 3) e.username = "Мінімум 3 символи";
-        else if (this.user.username.length > 20) e.username = "Максимум 20 символів";
-        else if (!/^[a-z0-9_.]+$/.test(this.user.username)) e.username = "Лише малі літери, цифри, _ .";
+        if (!username) e.username = "Введіть імʼя користувача";
+        else if (username.length < 3) e.username = "Мінімум 3 символи";
+        else if (username.length > 20) e.username = "Максимум 20 символів";
+        else if (!/^[a-zA-Z]+$/.test(username)) e.username = "Імʼя користувача має містити тільки англійські літери";
       }
       if (this.touched.fullName) {
-        if (!this.user.fullName?.trim()) e.fullName = "Введіть повне імʼя";
+        if (!fullName) e.fullName = "Введіть повне імʼя";
+        else if (fullName.length < 2) e.fullName = "Мінімум 2 символи";
+        else if (fullName.length > 50) e.fullName = "Максимум 50 символів";
+        else if (!/^[a-zA-Z]+(?:[ '-][a-zA-Z]+)*$/.test(fullName)) e.fullName = "Повне імʼя має містити тільки англійські літери";
       }
       return e;
     }
   },
   async mounted() {
-    if (!localStorage.getItem("token")) {
-      this.$router.replace("/login");
-      return;
-    }
     try {
       const res = await api.get("/user/profile");
       const d = res.data;
@@ -159,6 +161,12 @@ export default {
     }
   },
   methods: {
+    normalizeUsername() {
+      this.user.username = this.user.username.replace(/\s+/g, "");
+    },
+    normalizeFullName() {
+      this.user.fullName = this.user.fullName.replace(/\s{2,}/g, " ");
+    },
     touch(field) {
       this.touched[field] = true;
     },
@@ -173,9 +181,9 @@ export default {
       this.message = "";
       try {
         await api.patch("/user/profile", {
-          username: this.user.username,
-          fullName: this.user.fullName,
-          full_name: this.user.fullName
+          username: this.user.username.trim(),
+          fullName: this.user.fullName.replace(/\s+/g, " ").trim(),
+          full_name: this.user.fullName.replace(/\s+/g, " ").trim()
         });
         this.message = "Збережено ✓";
         setTimeout(() => { this.message = ""; }, 3000);
@@ -204,12 +212,10 @@ export default {
     },
     async logout() {
       try {
-        await api.post("/user/logout");
+        await api.post("/auth/logout");
       } catch (e) {
       } finally {
         disconnect();
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
         this.$router.replace("/login");
       }
     },
@@ -264,7 +270,7 @@ export default {
   flex-direction: column;
   align-items: center;
   padding: 28px 16px 60px;
-  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: inherit;
 }
 
 .topbar {
@@ -491,19 +497,32 @@ input:disabled {
 }
 
 .field-error {
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
   font-size: 12px;
-  color: #e53e3e;
-  margin-top: 5px;
+  line-height: 1.45;
+  color: #be123c;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-top: 6px;
   animation: fadeIn 0.2s ease;
 }
 .field-hint {
   font-size: 12px;
-  color: #aaa;
-  margin-top: 5px;
+  color: #667085;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-top: 6px;
 }
 .input-error {
-  border-color: #e53e3e !important;
-  background: #fff5f5 !important;
+  border-color: #e11d48 !important;
+  background: linear-gradient(180deg, #fff8f8 0%, #fff1f2 100%) !important;
+  box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.08);
 }
 
 .logout-area {
