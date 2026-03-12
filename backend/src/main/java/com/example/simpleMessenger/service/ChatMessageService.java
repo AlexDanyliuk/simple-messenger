@@ -10,4 +10,5 @@ public interface ChatMessageService {
     ChatMessage saveChatMessage(ChatMessage chatMessage);
     List<ChatMessage> findChatMessages(Long senderId, Long recipientId);
     void markAsRead(Long senderId, Long recipientId);
+    void editMessage(Long messageId, String newContent, Long requesterId);
 }

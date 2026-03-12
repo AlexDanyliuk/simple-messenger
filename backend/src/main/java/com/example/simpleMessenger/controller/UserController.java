@@ -55,6 +55,9 @@ public class UserController {
     public ResponseEntity<List<UserListDto>> searchUsers(
             @RequestParam String q,
             Principal principal) {
+        if (q == null || q.trim().length() < 4) {
+            return ResponseEntity.ok(List.of());
+        }
         return ResponseEntity.ok(
                 userService.searchByUsername(q, principal.getName())
         );

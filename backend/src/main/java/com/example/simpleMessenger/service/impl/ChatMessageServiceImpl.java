@@ -1,7 +1,9 @@
 package com.example.simpleMessenger.service.impl;
 
 import com.example.simpleMessenger.dto.ChatMessageDto;
+import com.example.simpleMessenger.dto.MessageStatusUpdateDto;
 import com.example.simpleMessenger.dto.UserListDto;
+import com.example.simpleMessenger.dto.UserProfileDto;
 import com.example.simpleMessenger.entity.ChatMessage;
 import com.example.simpleMessenger.repository.ChatMessageRepository;
 import com.example.simpleMessenger.service.ChatMessageService;
@@ -46,6 +48,17 @@ public class ChatMessageServiceImpl implements ChatMessageService {
 
         messagingTemplate.convertAndSend("/topic/chat/" + saved.getChatId(), saved);
 
+        // Mark delivered immediately if recipient is currently online
+        UserProfileDto recipientProfile = userService.getUserById(dto.getRecipientId());
+        if ("ONLINE".equals(recipientProfile.getStatus())) {
+            saved.setDeliveredAt(new Date());
+            chatMessageRepository.save(saved);
+            messagingTemplate.convertAndSend(
+                    "/topic/message-status/" + saved.getChatId(),
+                    new MessageStatusUpdateDto(saved.getSenderId(), "DELIVERED", saved.getChatId())
+            );
+        }
+
         int unreadForRecipient = chatMessageRepository.countBySenderIdAndRecipientIdAndIsRead(
                 senderId, dto.getRecipientId(), false
         );
@@ -53,12 +66,12 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         UserListDto recipientDto = userService.getUserListDtoById(dto.getRecipientId());
         recipientDto.setLastMessage(saved.getContent());
         recipientDto.setLastMessageTime(saved.getTimestamp());
-        recipientDto.setUnreadCount(0); // sender бачить 0 непрочитаних
+        recipientDto.setUnreadCount(0);
 
         UserListDto senderDto = userService.getUserListDtoById(senderId);
         senderDto.setLastMessage(saved.getContent());
         senderDto.setLastMessageTime(saved.getTimestamp());
-        senderDto.setUnreadCount(unreadForRecipient); // recipient бачить кількість непрочитаних
+        senderDto.setUnreadCount(unreadForRecipient);
 
         messagingTemplate.convertAndSend("/topic/conversations/" + senderId, recipientDto);
         messagingTemplate.convertAndSend("/topic/conversations/" + dto.getRecipientId(), senderDto);
@@ -86,13 +99,26 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     @Override
     @Transactional
     public void markAsRead(Long senderId, Long recipientId) {
+        Date now = new Date();
         List<ChatMessage> unread = chatMessageRepository.findBySenderIdAndRecipientIdAndIsRead(
                 senderId, recipientId, false
         );
-        unread.forEach(msg -> msg.setRead(true));
+        unread.forEach(msg -> {
+            msg.setRead(true);
+            if (msg.getDeliveredAt() == null) msg.setDeliveredAt(now);
+            msg.setReadAt(now);
+        });
         chatMessageRepository.saveAll(unread);
 
-        // Повідомляємо recipient що він прочитав повідомлення від senderId
+        // Broadcast read status so sender sees blue ticks in real-time
+        if (!unread.isEmpty()) {
+            String chatId = unread.get(0).getChatId();
+            messagingTemplate.convertAndSend(
+                    "/topic/message-status/" + chatId,
+                    new MessageStatusUpdateDto(senderId, "READ", chatId)
+            );
+        }
+
         UserListDto senderDto = userService.getUserListDtoById(senderId);
         senderDto.setUnreadCount(0);
 
@@ -106,5 +132,25 @@ public class ChatMessageServiceImpl implements ChatMessageService {
                 });
 
         messagingTemplate.convertAndSend("/topic/conversations/" + recipientId, senderDto);
+    }
+
+    @Override
+    @Transactional
+    public void editMessage(Long messageId, String newContent, Long requesterId) {
+        ChatMessage msg = chatMessageRepository.findById(messageId)
+                .orElseThrow(() -> new RuntimeException("Message not found"));
+
+        if (!msg.getSenderId().equals(requesterId)) {
+            throw new RuntimeException("Not allowed to edit this message");
+        }
+
+        msg.setContent(newContent);
+        msg.setEditedAt(new Date());
+        chatMessageRepository.save(msg);
+
+        messagingTemplate.convertAndSend(
+                "/topic/chat-edit/" + msg.getChatId(),
+                msg
+        );
     }
 }

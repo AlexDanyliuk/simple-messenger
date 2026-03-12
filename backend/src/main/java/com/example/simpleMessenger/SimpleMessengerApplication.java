@@ -9,8 +9,6 @@ public class SimpleMessengerApplication {
 
 	public static void main(String[] args) {
 
-        // ignoreIfMissing() — не падає, якщо .env відсутній (наприклад, у Docker)
-        // fallback на реальні змінні середовища, передані через docker-compose / OS
         Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
 
         System.setProperty("DB_URL",      dotenv.get("DB_URL",      System.getenv("DB_URL")));
