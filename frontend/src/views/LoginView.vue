@@ -1,7 +1,7 @@
 <template>
   <div class="auth-container">
     <div class="auth-form">
-      <h2>Вхід</h2>
+      <h2>{{ t("loginTitle") }}</h2>
 
       <div class="field">
         <input
@@ -13,7 +13,7 @@
           :class="{ 'input-error': errors.email }"
         />
         <span v-if="errors.email" class="field-error">{{ errors.email }}</span>
-        <span v-else class="field-hint">Дозволена тільки адреса Gmail, наприклад user@gmail.com</span>
+        <span v-else class="field-hint">{{ t("loginHintGmail") }}</span>
       </div>
 
       <div class="field">
@@ -21,15 +21,15 @@
           v-model="password"
           @blur="touch('password')"
           type="password"
-          placeholder="Пароль"
+          :placeholder="t('loginPasswordPlaceholder')"
           :class="{ 'input-error': errors.password }"
         />
         <span v-if="errors.password" class="field-error">{{ errors.password }}</span>
-        <span v-else class="field-hint">Введіть пароль від акаунту</span>
+        <span v-else class="field-hint">{{ t("loginPasswordHint") }}</span>
       </div>
 
       <button @click="login" :disabled="loading">
-        {{ loading ? 'Завантаження...' : 'Увійти' }}
+        {{ loading ? t("commonLoading") : t("loginSubmit") }}
       </button>
 
             <div v-if="serverError" class="msg-banner msg-error">
@@ -38,7 +38,7 @@
         </div>
 
       <a href="#" @click.prevent="goToRegister">
-        Немає акаунту? Зареєструватись
+        {{ t("loginNoAccount") }}
       </a>
     </div>
   </div>
@@ -46,6 +46,7 @@
 
 <script>
 import axios from "axios";
+import { t } from "../services/userPreferences";
 
 export default {
   name: "LoginView",
@@ -63,18 +64,19 @@ export default {
       const e = {};
       const email = this.email.trim().toLowerCase();
       if (this.touched.email) {
-        if (!email) e.email = "Введіть email";
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = "Невірний формат email";
-        else if (!/@gmail\.com$/i.test(email)) e.email = "Дозволена тільки пошта @gmail.com";
+        if (!email) e.email = t("loginEmailRequired");
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = t("loginEmailInvalid");
+        else if (!/@gmail\.com$/i.test(email)) e.email = t("loginEmailGmailOnly");
       }
       if (this.touched.password) {
-        if (!this.password) e.password = "Введіть пароль";
-        else if (!this.password.trim()) e.password = "Пароль не може складатися лише з пробілів";
+        if (!this.password) e.password = t("loginPasswordRequired");
+        else if (!this.password.trim()) e.password = t("loginPasswordSpacesOnly");
       }
       return e;
     }
   },
   methods: {
+    t,
     normalizeEmail() {
       this.email = this.email.trim().toLowerCase();
     },
@@ -98,7 +100,7 @@ export default {
         });
         this.$router.push("/chats");
       } catch (err) {
-        this.serverError = err.response?.data?.message || "Невірний email або пароль";
+        this.serverError = err.response?.data?.message || t("loginInvalidCredentials");
       } finally {
         this.loading = false;
       }

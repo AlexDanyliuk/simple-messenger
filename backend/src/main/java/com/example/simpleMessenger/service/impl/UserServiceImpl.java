@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -65,10 +66,11 @@ public class UserServiceImpl implements UserService {
     public void logout() {
         User user = getCurrentUser();
         user.setStatus(Status.OFFLINE);
+        user.setLastSeenAt(new Date());
         userRepository.save(user);
         messagingTemplate.convertAndSend(
                 "/topic/status",
-                new StatusUpdateDto(user.getId(), user.getUsername(), user.getStatus().name())
+            new StatusUpdateDto(user.getId(), user.getUsername(), user.getStatus().name(), user.getLastSeenAt())
         );
     }
 
@@ -94,6 +96,7 @@ public class UserServiceImpl implements UserService {
 
         if (user.getStatus() != Status.OFFLINE) {
             user.setStatus(Status.OFFLINE);
+            user.setLastSeenAt(new Date());
             userRepository.save(user);
         }
 
@@ -112,6 +115,9 @@ public class UserServiceImpl implements UserService {
         User user = userMapper.toEntity(registerDto);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setStatus(Status.OFFLINE);
+        user.setTheme("light");
+        user.setLanguage("uk");
+        user.setLastSeenAt(new Date());
         return userMapper.toUserResponseDto(userRepository.save(user));
     }
 
@@ -128,6 +134,12 @@ public class UserServiceImpl implements UserService {
         if (updateUserDto.getUsername() != null) {
             validateUsername(updateUserDto.getUsername(), user.getUsername());
             user.setUsername(updateUserDto.getUsername());
+        }
+        if (updateUserDto.getTheme() != null) {
+            user.setTheme(updateUserDto.getTheme());
+        }
+        if (updateUserDto.getLanguage() != null) {
+            user.setLanguage(updateUserDto.getLanguage());
         }
         return userMapper.toProfileDto(userRepository.save(user));
     }
@@ -246,6 +258,7 @@ public class UserServiceImpl implements UserService {
         userRepository.findByUsername(user.getUsername()).ifPresent(storedUser -> {
             if (storedUser.getStatus() == Status.ONLINE) {
                 storedUser.setStatus(Status.OFFLINE);
+                storedUser.setLastSeenAt(new Date());
                 userRepository.save(storedUser);
             }
         });

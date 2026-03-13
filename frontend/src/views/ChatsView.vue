@@ -43,7 +43,7 @@ export default {
       (update) => {
         this.users = this.users.map(u =>
           String(u.id) === String(update.userId)
-            ? { ...u, status: update.status }
+            ? { ...u, status: update.status, lastSeenAt: update.lastSeenAt || u.lastSeenAt }
             : u
         );
       }

@@ -28,15 +28,15 @@ export default {
 
 .own {
   align-self: flex-end;
-  background: #d0e8ff;
-  color: #111111;
+  background: var(--msg-own-bg);
+  color: var(--msg-own-color);
   border-bottom-right-radius: 4px;
 }
 
 .other {
   align-self: flex-start;
-  background: #ffffff;
-  color: #111111;
+  background: var(--msg-other-bg);
+  color: var(--msg-other-color);
   border-bottom-left-radius: 4px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }

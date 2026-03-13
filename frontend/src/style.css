@@ -17,6 +17,15 @@
   --black: #000000;
   --accent: #111111;
   --online-dot: #4caf50;
+  --app-bg: #ffffff;
+  --app-text: #111111;
+  --panel-bg: #ffffff;
+  --panel-soft: #f7f7f7;
+  --border-color: #ebebeb;
+  --msg-own-bg: #d4eaff;
+  --msg-own-color: #111111;
+  --msg-other-bg: #ffffff;
+  --msg-other-color: #111111;
 
   font-family: 'Manrope', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 15px;
@@ -27,10 +36,34 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+html[data-theme="dark"] {
+  --app-bg: #0d1117;
+  --app-text: #e2e8f4;
+  --panel-bg: #161c2a;
+  --panel-soft: #1c2438;
+  --border-color: #263044;
+  --text-strong: #eef2fc;
+  --text-normal: #c8d4e8;
+  --text-muted-dark: #7a92b0;
+  --surface-elev-1: #1e2a3e;
+  --surface-elev-2: #131923;
+  --surface-input: #18243a;
+  --accent-soft: #4a90e2;
+  --accent-own-bg: #2563a8;
+  --accent-own-hover: #2f74c0;
+  --msg-own-bg: #2563a8;
+  --msg-own-color: #deeeff;
+  --msg-other-bg: #1e2a3e;
+  --msg-other-color: #d4deef;
+  --hover-item: #1c2b42;
+  --hover-popup: #1e2a3e;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
-  background: var(--white);
+  background: var(--app-bg);
+  color: var(--app-text);
 }
 
 #app {
@@ -61,6 +94,214 @@ button {
 
 input {
   font-family: inherit;
+}
+
+html[data-theme="dark"] .chat-layout,
+html[data-theme="dark"] .chat-view,
+html[data-theme="dark"] .chat-head,
+html[data-theme="dark"] .composer,
+html[data-theme="dark"] .page,
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .auth-form,
+html[data-theme="dark"] .user-footer,
+html[data-theme="dark"] .profile-popup,
+html[data-theme="dark"] .chat-item {
+  background: var(--panel-bg) !important;
+  color: var(--app-text) !important;
+}
+
+html[data-theme="dark"] .sidebar {
+  background: var(--surface-elev-2) !important;
+  color: var(--app-text) !important;
+}
+
+html[data-theme="dark"] .sidebar,
+html[data-theme="dark"] .chat-head,
+html[data-theme="dark"] .composer,
+html[data-theme="dark"] .user-footer,
+html[data-theme="dark"] .profile-popup,
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .chat-item {
+  border-color: var(--border-color) !important;
+}
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] select {
+  background: #111827 !important;
+  color: #e5e7eb !important;
+  border-color: #334155 !important;
+}
+
+html[data-theme="dark"] .field-hint,
+html[data-theme="dark"] .last-seen-value,
+html[data-theme="dark"] .search-wrap {
+  background: var(--surface-input) !important;
+  border-color: #355072 !important;
+  color: var(--text-normal) !important;
+}
+
+html[data-theme="dark"] .auth-container,
+html[data-theme="dark"] .page,
+html[data-theme="dark"] .chat-content,
+html[data-theme="dark"] .messages,
+html[data-theme="dark"] .avatar-section,
+html[data-theme="dark"] .topbar {
+  background: var(--app-bg) !important;
+}
+
+html[data-theme="dark"] .chat-view,
+html[data-theme="dark"] .chat-list,
+html[data-theme="dark"] .search-results,
+html[data-theme="dark"] .modal-card,
+html[data-theme="dark"] .modal-row,
+html[data-theme="dark"] .composer,
+html[data-theme="dark"] .input-area {
+  background: var(--panel-bg) !important;
+}
+
+html[data-theme="dark"] h1,
+html[data-theme="dark"] h2,
+html[data-theme="dark"] h3,
+html[data-theme="dark"] .name,
+html[data-theme="dark"] .chat-head__title,
+html[data-theme="dark"] .avatar-name,
+html[data-theme="dark"] .popup-name,
+html[data-theme="dark"] .modal-name,
+html[data-theme="dark"] .modal-value,
+html[data-theme="dark"] .user-name,
+html[data-theme="dark"] .content,
+html[data-theme="dark"] .time-text,
+html[data-theme="dark"] .msg-time,
+html[data-theme="dark"] .meta-status,
+html[data-theme="dark"] .chat-head__sub,
+html[data-theme="dark"] .preview,
+html[data-theme="dark"] .popup-email,
+html[data-theme="dark"] .avatar-email,
+html[data-theme="dark"] .field label,
+html[data-theme="dark"] .back-btn,
+html[data-theme="dark"] .loading,
+html[data-theme="dark"] a {
+  color: var(--text-normal) !important;
+}
+
+html[data-theme="dark"] .preview.unread,
+html[data-theme="dark"] .chat-head__title,
+html[data-theme="dark"] .name,
+html[data-theme="dark"] .avatar-name,
+html[data-theme="dark"] .modal-name,
+html[data-theme="dark"] .popup-name,
+html[data-theme="dark"] h2 {
+  color: var(--text-strong) !important;
+}
+
+html[data-theme="dark"] .chat-item,
+html[data-theme="dark"] .search-wrap,
+html[data-theme="dark"] .modal-row,
+html[data-theme="dark"] .modal-rows,
+html[data-theme="dark"] .popup-divider,
+html[data-theme="dark"] .sidebar-header,
+html[data-theme="dark"] .logout-area,
+html[data-theme="dark"] .user-footer,
+html[data-theme="dark"] .chat-head {
+  border-color: var(--border-color) !important;
+}
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] .edit-input {
+  background: var(--surface-input) !important;
+  color: var(--text-strong) !important;
+  border-color: #3b5678 !important;
+}
+
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] .search-input::placeholder {
+  color: #8ea3bf !important;
+}
+
+html[data-theme="dark"] .btn-save,
+html[data-theme="dark"] .btn-avatar-save,
+html[data-theme="dark"] .composer button,
+html[data-theme="dark"] .btn-save {
+  background: var(--accent-soft) !important;
+  color: #f8fbff !important;
+}
+
+html[data-theme="dark"] .btn-avatar-cancel,
+html[data-theme="dark"] .btn-cancel,
+html[data-theme="dark"] .btn-logout,
+html[data-theme="dark"] .edit-btn {
+  background: var(--surface-elev-1) !important;
+  color: var(--text-normal) !important;
+  border-color: var(--border-color) !important;
+}
+
+html[data-theme="dark"] .bubble,
+html[data-theme="dark"] .msg:not(.own) .bubble {
+  background: var(--surface-elev-1) !important;
+  color: var(--text-strong) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .bubble--own,
+html[data-theme="dark"] .msg.own .bubble {
+  background: var(--accent-own-bg) !important;
+  color: var(--msg-own-color) !important;
+}
+
+html[data-theme="dark"] .field-error,
+html[data-theme="dark"] .msg-error {
+  background: #3a1f2a !important;
+  border-color: #7f2e4a !important;
+  color: #ffd7e2 !important;
+}
+
+html[data-theme="dark"] .msg-success {
+  background: #173226 !important;
+  border-color: #2a6b4b !important;
+  color: #c5ffe4 !important;
+}
+
+html[data-theme="dark"] .search-state,
+html[data-theme="dark"] .chat-head__hint,
+html[data-theme="dark"] .modal-label,
+html[data-theme="dark"] .field label,
+html[data-theme="dark"] .avatar-email,
+html[data-theme="dark"] .popup-email {
+  color: var(--text-muted-dark) !important;
+}
+
+/* ── dark hover states ── */
+html[data-theme="dark"] .chat-item:hover {
+  background: var(--hover-item) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="dark"] .user-footer:hover {
+  background: var(--hover-item) !important;
+  transform: none !important;
+}
+
+html[data-theme="dark"] .popup-item:hover {
+  background: var(--hover-popup) !important;
+}
+
+html[data-theme="dark"] .popup-item--danger:hover {
+  background: #2d1a22 !important;
+}
+
+html[data-theme="dark"] .search-clear:hover {
+  color: var(--text-normal) !important;
+}
+
+html[data-theme="dark"] .popup-item {
+  color: var(--text-normal) !important;
+}
+
+html[data-theme="dark"] .popup-item--danger {
+  color: #f87171 !important;
 }
 
 @media (max-width: 768px) {

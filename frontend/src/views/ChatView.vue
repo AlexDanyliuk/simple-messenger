@@ -127,7 +127,11 @@ export default {
       if (!this.statusSubscription) {
         this.statusSubscription = await subscribe('/topic/status', (update) => {
           if (this.recipient && String(this.recipient.id) === String(update.userId)) {
-            this.recipient = { ...this.recipient, status: update.status };
+            this.recipient = {
+              ...this.recipient,
+              status: update.status,
+              lastSeenAt: update.lastSeenAt || this.recipient.lastSeenAt
+            };
           }
         });
       }
@@ -225,6 +229,6 @@ export default {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #f9f9f9;
+  background: var(--app-bg);
 }
 </style>

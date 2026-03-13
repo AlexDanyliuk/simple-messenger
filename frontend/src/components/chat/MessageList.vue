@@ -17,8 +17,8 @@
           @keydown.esc="cancelEdit"
         />
         <div class="edit-actions">
-          <button class="btn-cancel" @click="cancelEdit">Скасувати</button>
-          <button class="btn-save" @click="submitEdit(m)">Зберегти</button>
+          <button class="btn-cancel" @click="cancelEdit">{{ t("commonCancel") }}</button>
+          <button class="btn-save" @click="submitEdit(m)">{{ t("commonSave") }}</button>
         </div>
       </div>
 
@@ -32,7 +32,7 @@
         <button
           v-if="Number(m.senderId) === Number(currentUserId)"
           class="edit-btn"
-          title="Редагувати"
+          :title="t('chatEdit')"
           @click="startEdit(m)"
         >
           <svg viewBox="0 0 16 16" width="13" height="13" fill="none">
@@ -43,7 +43,7 @@
 
         <span class="content">{{ m.content }}</span>
         <span class="meta">
-          <span v-if="m.editedAt" class="edited-label">ред.</span>
+          <span v-if="m.editedAt" class="edited-label">{{ t("chatEdited") }}</span>
           <span class="time-text">{{ formatTime(m.timestamp) }}</span>
           <span
             v-if="Number(m.senderId) === Number(currentUserId)"
@@ -65,6 +65,8 @@
 </template>
 
 <script>
+import { t } from "../../services/userPreferences";
+
 export default {
   name: 'MessageList',
   props: {
@@ -79,6 +81,7 @@ export default {
     };
   },
   methods: {
+    t,
     formatTime(ts) {
       if (!ts) return '';
       try {
@@ -160,15 +163,15 @@ export default {
   position: relative;
 }
 .msg:not(.own) .bubble {
-  background: #fff;
-  color: #111;
+  background: var(--msg-other-bg);
+  color: var(--msg-other-color);
   border-bottom-left-radius: 4px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.07);
 }
 .bubble--own,
 .msg.own .bubble {
-  background: #d4eaff;
-  color: #111;
+  background: var(--msg-own-bg);
+  color: var(--msg-own-color);
   border-bottom-right-radius: 4px;
   box-shadow: 0 1px 2px rgba(0,0,0,0.08);
 }
@@ -233,7 +236,7 @@ export default {
   gap: 8px;
   min-width: 220px;
   padding: 10px 14px;
-  background: #d4eaff;
+  background: var(--msg-own-bg);
   border-bottom-right-radius: 4px;
   box-shadow: 0 1px 2px rgba(0,0,0,0.08);
 }
@@ -241,14 +244,14 @@ export default {
   width: 100%;
   border: none;
   outline: none;
-  background: rgba(255,255,255,0.7);
+  background: var(--surface-input, rgba(255,255,255,0.7));
   border-radius: 8px;
   padding: 6px 10px;
   font-size: 14px;
   line-height: 1.5;
   resize: none;
   font-family: inherit;
-  color: #111;
+  color: var(--app-text);
   field-sizing: content;
   min-height: 32px;
 }

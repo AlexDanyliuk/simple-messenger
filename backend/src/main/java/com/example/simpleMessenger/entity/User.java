@@ -4,6 +4,8 @@ package com.example.simpleMessenger.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Date;
+
 @Entity
 @Table(name = "users")
 @Getter
@@ -29,5 +31,11 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private Status status;
+
+    private Date lastSeenAt;
+
+    private String theme;
+
+    private String language;
 
 }

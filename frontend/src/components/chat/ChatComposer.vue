@@ -2,16 +2,18 @@
   <div class="composer">
     <input
       v-model="text"
-      placeholder="Написати повідомлення…"
+      :placeholder="t('chatMessagePlaceholder')"
       @keyup.enter="send"
       @input="onInput"
       @blur="stopTyping"
     />
-    <button @click="send">Надіслати</button>
+    <button @click="send">{{ t("chatSend") }}</button>
   </div>
 </template>
 
 <script>
+import { t } from "../../services/userPreferences";
+
 export default {
   name: 'ChatComposer',
   emits: ['send', 'typing'],
@@ -19,6 +21,7 @@ export default {
     return { text: '', typingTimeout: null };
   },
   methods: {
+    t,
     send() {
       const msg = (this.text || '').trim();
       if (!msg) return;

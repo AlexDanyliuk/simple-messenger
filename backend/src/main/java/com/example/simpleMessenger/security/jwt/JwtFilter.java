@@ -29,8 +29,15 @@ public class JwtFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull  FilterChain filterChain) throws ServletException, IOException {
         String token = getTokenFromRequest(request);
-        if (token != null && jwtService.validateJwtToken(token)) {
-            setCustomUserDetailsToSecurityContextHolder(token);
+        if (token != null) {
+            try {
+                if (jwtService.validateJwtToken(token)) {
+                    setCustomUserDetailsToSecurityContextHolder(token);
+                }
+            } catch (Exception ignored) {
+                // Broken or stale auth token must not break public endpoints.
+                SecurityContextHolder.clearContext();
+            }
         }
         filterChain.doFilter(request, response);
 

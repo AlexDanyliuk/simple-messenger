@@ -20,7 +20,7 @@
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                 <circle cx="12" cy="7" r="4"/>
               </svg>
-              Імʼя користувача
+              {{ t("profileTitleUsername") }}
             </span>
             <span class="modal-value">{{ recipient ? recipient.username : '—' }}</span>
           </div>
@@ -30,7 +30,7 @@
                 <rect x="2" y="3" width="20" height="14" rx="2"/>
                 <path d="M8 21h8M12 17v4"/>
               </svg>
-              Повне імʼя
+              {{ t("profileTitleFullName") }}
             </span>
             <span class="modal-value">{{ recipient ? (recipient.fullName || '—') : '—' }}</span>
           </div>
@@ -40,7 +40,7 @@
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                 <polyline points="22,6 12,13 2,6"/>
               </svg>
-              Email
+              {{ t("profileTitleEmail") }}
             </span>
             <span class="modal-value">{{ (recipient && recipient.email) ? recipient.email : '—' }}</span>
           </div>
@@ -51,6 +51,8 @@
 </template>
 
 <script>
+import { t } from "../../services/userPreferences";
+
 export default {
   name: 'ProfileModal',
   props: {
@@ -58,7 +60,8 @@ export default {
     recipient: { type: Object, default: null },
     recipientInitial: { type: String, default: '?' }
   },
-  emits: ['close']
+  emits: ['close'],
+  methods: { t }
 };
 </script>
 

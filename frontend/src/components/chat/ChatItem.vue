@@ -13,13 +13,13 @@
         <div class="name">{{ chat.username }}</div>
         <div class="msg-time" v-if="chat.lastMessageTime">{{ formatTime(chat.lastMessageTime) }}</div>
         <div class="meta-status" v-else :class="isOnline ? 'text-online' : 'text-offline'">
-          {{ isOnline ? 'В мережі' : 'Не в мережі' }}
+          {{ statusLabel }}
         </div>
       </div>
       <div class="preview-row">
         <div class="preview" :class="{ unread: hasUnread }">
           <template v-if="isTyping">
-            <span class="typing-dots"><span></span><span></span><span></span></span> друкує...
+            <span class="typing-dots"><span></span><span></span><span></span></span> {{ t("typing") }}
           </template>
           <template v-else>{{ chat.lastMessage || '\u00A0' }}</template>
         </div>
@@ -30,23 +30,33 @@
 </template>
 
 <script>
+import { preferences, t } from "../../services/userPreferences";
+
 export default {
   props: ["chat"],
 
   computed: {
+    language() {
+      return preferences.language;
+    },
     isOnline() {
       return this.chat.status === "ONLINE";
     },
     hasUnread() {
       return this.chat.unreadCount > 0;
-    }
-    ,
+    },
     isTyping() {
       return this.chat.typing === true;
+    },
+    statusLabel() {
+      if (this.isOnline) return t("online");
+      if (this.chat.lastSeenAt) return `${t("lastSeen")} ${this.formatLastSeen(this.chat.lastSeenAt)}`;
+      return t("offline");
     }
   },
 
   methods: {
+    t,
     formatTime(ts) {
       if (!ts) return "";
       const d = new Date(ts);
@@ -56,6 +66,21 @@ export default {
         return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
       }
       return d.toLocaleDateString([], { day: "2-digit", month: "2-digit" });
+    },
+    formatLastSeen(ts) {
+      const d = new Date(ts);
+      const now = new Date();
+      const diffMs = Math.max(0, now - d);
+      const mins = Math.floor(diffMs / 60000);
+
+      if (mins < 1) return t("timeJustNow");
+      if (mins < 60) return t("timeMinAgo", { count: mins });
+
+      const hours = Math.floor(mins / 60);
+      if (hours < 24) return t("timeHourAgo", { count: hours });
+
+      return d.toLocaleDateString([], { day: "2-digit", month: "2-digit" }) + " " +
+        d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     }
   }
 };

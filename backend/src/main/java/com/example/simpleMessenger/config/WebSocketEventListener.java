@@ -40,7 +40,8 @@ public class WebSocketEventListener {
                 new StatusUpdateDto(
                         user.getId(),
                         user.getUsername(),
-                        user.getStatus().name()
+                        user.getStatus().name(),
+                        user.getLastSeenAt()
                 )
         );
 
@@ -63,7 +64,8 @@ public class WebSocketEventListener {
                 new StatusUpdateDto(
                         user.getId(),
                         user.getUsername(),
-                        user.getStatus().name()
+                        user.getStatus().name(),
+                        user.getLastSeenAt()
                 )
         );
 

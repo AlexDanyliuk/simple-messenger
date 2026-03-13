@@ -16,4 +16,7 @@ public class UserProfileDto {
     private String email;
     private String avatarUrl;
     private String status;
+    private java.util.Date lastSeenAt;
+    private String theme;
+    private String language;
 }

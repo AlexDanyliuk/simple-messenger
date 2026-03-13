@@ -1,5 +1,5 @@
 <template>
-  <div class="chat-head" @click="$emit('click')" title="Переглянути профіль">
+  <div class="chat-head" @click="$emit('click')" :title="t('chatProfileHint')">
     <div class="chat-head__avatar">
       <img v-if="recipient && recipient.avatarUrl" :src="recipient.avatarUrl" class="head-avatar-img" alt="" />
       <span v-else>{{ recipientInitial }}</span>
@@ -9,7 +9,7 @@
       <transition name="typing-fade" mode="out-in">
         <div v-if="isTyping" class="chat-head__sub typing-indicator" key="typing">
           <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-          друкує...
+          {{ t("typing") }}
         </div>
         <div
           v-else
@@ -17,21 +17,52 @@
           :class="recipient && recipient.status === 'ONLINE' ? 'status-online' : 'status-offline'"
           key="status"
         >
-          {{ recipient ? (recipient.status === 'ONLINE' ? 'В мережі' : 'Не в мережі') : '' }}
+          {{ statusText }}
         </div>
       </transition>
     </div>
-    <div class="chat-head__hint">переглянути профіль</div>
+    <div class="chat-head__hint">{{ t("chatProfileHint") }}</div>
   </div>
 </template>
 
 <script>
+import { preferences, t } from "../../services/userPreferences";
+
 export default {
   name: 'ChatHead',
   props: {
     recipient: { type: Object, default: null },
     recipientInitial: { type: String, default: '?' },
     isTyping: { type: Boolean, default: false }
+  },
+  computed: {
+    language() {
+      return preferences.language;
+    },
+    statusText() {
+      if (!this.recipient) return "";
+      if (this.recipient.status === "ONLINE") return t("online");
+      if (this.recipient.lastSeenAt) return `${t("lastSeen")} ${this.formatLastSeen(this.recipient.lastSeenAt)}`;
+      return t("offline");
+    }
+  },
+  methods: {
+    t,
+    formatLastSeen(ts) {
+      const d = new Date(ts);
+      const now = new Date();
+      const diffMs = Math.max(0, now - d);
+      const mins = Math.floor(diffMs / 60000);
+
+      if (mins < 1) return t("timeJustNow");
+      if (mins < 60) return t("timeMinAgo", { count: mins });
+
+      const hours = Math.floor(mins / 60);
+      if (hours < 24) return t("timeHourAgo", { count: hours });
+
+      return d.toLocaleDateString([], { day: "2-digit", month: "2-digit" }) + " " +
+        d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
   },
   emits: ['click']
 };

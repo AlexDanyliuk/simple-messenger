@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { defineComponent, h } from "vue";
+import { t } from "../services/userPreferences";
 import LoginView    from "../views/LoginView.vue";
 import RegisterView from "../views/RegisterView.vue";
 import ProfileView  from "../views/ProfileView.vue";
@@ -16,7 +17,7 @@ async function hasActiveSession() {
 
 const SelectChatPlaceholder = defineComponent({
   render() {
-    return h("div", { style: "padding: 20px; color: #aaa; font-size: 14px;" }, "Оберіть чат");
+    return h("div", { style: "padding: 20px; color: #aaa; font-size: 14px;" }, t("chatSelectPlaceholder"));
   }
 });
 

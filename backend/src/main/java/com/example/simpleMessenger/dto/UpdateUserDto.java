@@ -25,4 +25,16 @@ public class UpdateUserDto {
             message = "Ім'я користувача має містити тільки англійські літери"
     )
     private String username;
+
+    @Pattern(
+            regexp = "^(light|dark)$",
+            message = "Theme must be light or dark"
+    )
+    private String theme;
+
+    @Pattern(
+            regexp = "^(uk|en)$",
+            message = "Language must be uk or en"
+    )
+    private String language;
 }

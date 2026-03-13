@@ -13,7 +13,7 @@
             v-model="searchQuery"
             class="search-input"
             type="text"
-            placeholder="Пошук"
+            :placeholder="t('chatSearchPlaceholder')"
             @input="onSearchInput"
           />
           <button v-if="searchQuery" class="search-clear" @click="clearSearch">✕</button>
@@ -22,9 +22,9 @@
 
       <template v-if="searchQuery">
         <div class="search-results">
-          <div v-if="!isSearchReady" class="search-state">Введіть щонайменше 3 символи</div>
-          <div v-else-if="searchLoading" class="search-state">Пошук…</div>
-          <div v-else-if="searchResults.length === 0" class="search-state">Користувачів не знайдено</div>
+          <div v-if="!isSearchReady" class="search-state">{{ t("chatSearchMinChars") }}</div>
+          <div v-else-if="searchLoading" class="search-state">{{ t("chatSearchLoading") }}</div>
+          <div v-else-if="searchResults.length === 0" class="search-state">{{ t("chatSearchNotFound") }}</div>
           <ChatItem
             v-for="user in searchResults"
             :key="user.id"
@@ -50,7 +50,7 @@
           <div class="user-name">{{ me ? me.username : '...' }}</div>
           <div class="user-status">
             <span class="status-dot"></span>
-            В мережі
+            {{ t("online") }}
           </div>
         </div>
         <div class="user-chevron">
@@ -81,13 +81,13 @@
                 <circle cx="12" cy="8" r="4" stroke="#555" stroke-width="2"/>
                 <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#555" stroke-width="2" stroke-linecap="round"/>
               </svg>
-              Редагувати профіль
+              {{ t("chatEditProfile") }}
             </div>
             <div class="popup-item popup-item--danger" @click="logout">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                 <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
-              Вийти
+              {{ t("commonLogout") }}
             </div>
           </div>
         </div>
@@ -106,6 +106,7 @@ import ChatList from "../components/chat/ChatList.vue";
 import ChatItem from "../components/chat/ChatItem.vue";
 import api from "../services/api";
 import { connect, subscribe, disconnect } from "../services/websocket";
+import { applyUserPreferences, t } from "../services/userPreferences";
 
 export default {
   components: { ChatList, ChatItem },
@@ -138,6 +139,7 @@ export default {
   async mounted() {
     const profileRes = await api.get("/user/profile");
     this.me = profileRes.data;
+    applyUserPreferences(this.me);
 
     const res = await api.get("/user/conversations");
     this.users = res.data.filter(u => String(u.id) !== String(this.me?.id));
@@ -146,7 +148,7 @@ export default {
     this.statusSubscription = await subscribe("/topic/status", (update) => {
       this.users = this.users.map(u =>
         String(u.id) === String(update.userId)
-          ? { ...u, status: update.status }
+          ? { ...u, status: update.status, lastSeenAt: update.lastSeenAt || u.lastSeenAt }
           : u
       );
     });
@@ -159,6 +161,7 @@ export default {
         }
         const idx = this.users.findIndex(u => String(u.id) === String(updatedUser.id));
         if (idx === -1) {
+          this.users.unshift(updatedUser);
           return;
         }
 
@@ -198,6 +201,7 @@ export default {
   },
 
   methods: {
+    t,
     openChat(userId) {
       if (String(userId) === String(this.me?.id)) {
         return;
@@ -560,7 +564,7 @@ export default {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: #f9f9f9;
+  background: var(--app-bg);
   min-width: 0;
 }
 

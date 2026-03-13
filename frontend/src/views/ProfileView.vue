@@ -8,14 +8,14 @@
             stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        Назад до чатів
+        {{ t("profileBack") }}
       </button>
     </div>
 
     <div class="card">
 
       <div class="avatar-section">
-        <div class="avatar-wrap" @click="pickAvatar" title="Змінити аватарку">
+        <div class="avatar-wrap" @click="pickAvatar" :title="t('profileAvatarTitle')">
           <img v-if="avatarPreview || user.avatarUrl"
                :src="avatarPreview || user.avatarUrl"
                class="avatar avatar-img"
@@ -33,9 +33,9 @@
 
         <div v-if="avatarPreview" class="avatar-actions">
           <button class="btn-avatar-save" :disabled="avatarUploading" @click="uploadAvatar">
-            {{ avatarUploading ? 'Збереження...' : 'Зберегти фото' }}
+            {{ avatarUploading ? t("profileSaving") : t("profileAvatarSave") }}
           </button>
-          <button class="btn-avatar-cancel" @click="cancelAvatar">Скасувати</button>
+          <button class="btn-avatar-cancel" @click="cancelAvatar">{{ t("commonCancel") }}</button>
         </div>
 
         <div class="avatar-name">{{ user.username || '...' }}</div>
@@ -44,34 +44,50 @@
 
       <div class="form-section" v-if="!loading">
         <div class="field">
-          <label>Імʼя користувача</label>
+          <label>{{ t("profileTitleUsername") }}</label>
           <input
             v-model="user.username"
             @blur="touch('username')"
             @input="normalizeUsername"
-            placeholder="Імʼя користувача, наприклад taras"
+            :placeholder="t('profileUsernamePlaceholder')"
             :class="{ 'input-error': errors.username || user.username.length > 20 }"
           />
-          <span v-if="user.username.length > 20" class="field-error">Максимум 20 символів</span>
+          <span v-if="user.username.length > 20" class="field-error">{{ t("registerUsernameMax") }}</span>
           <span v-else-if="errors.username" class="field-error">{{ errors.username }}</span>
         </div>
         <div class="field">
-          <label>Повне імʼя</label>
+          <label>{{ t("profileTitleFullName") }}</label>
           <input
             v-model="user.fullName"
             @blur="touch('fullName')"
             @input="normalizeFullName"
-            placeholder="Повне імʼя, наприклад Taras Shevchenko"
+            :placeholder="t('profileFullNamePlaceholder')"
             :class="{ 'input-error': errors.fullName }"
           />
           <span v-if="errors.fullName" class="field-error">{{ errors.fullName }}</span>
         </div>
         <div class="field">
-          <label>Email</label>
+          <label>{{ t("profileTitleEmail") }}</label>
           <input v-model="user.email" disabled />
         </div>
 
-        <button class="btn-save" @click="updateProfile" :disabled="saving">{{ saving ? 'Збереження...' : 'Зберегти зміни' }}</button>
+        <div class="field">
+          <label>{{ t("profileTitleTheme") }}</label>
+          <select v-model="user.theme" @change="applyCurrentPreferences">
+            <option value="light">{{ t("profileThemeLight") }}</option>
+            <option value="dark">{{ t("profileThemeDark") }}</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>{{ t("profileTitleLanguage") }}</label>
+          <select v-model="user.language" @change="applyCurrentPreferences">
+            <option value="uk">{{ t("profileLangUk") }}</option>
+            <option value="en">{{ t("profileLangEn") }}</option>
+          </select>
+        </div>
+
+        <button class="btn-save" @click="updateProfile" :disabled="saving">{{ saving ? t("profileSaving") : t("profileSave") }}</button>
 
         <div v-if="message" class="msg-banner msg-success">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -83,7 +99,7 @@
         </div>
       </div>
 
-      <div class="loading" v-if="loading">Завантаження...</div>
+      <div class="loading" v-if="loading">{{ t("commonLoading") }}</div>
 
       <div class="logout-area">
         <button class="btn-logout" @click="logout">
@@ -93,7 +109,7 @@
               stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          Вийти
+          {{ t("commonLogout") }}
         </button>
       </div>
 
@@ -104,12 +120,13 @@
 <script>
 import api from "../services/api";
 import { disconnect } from "../services/websocket";
+import { applyUserPreferences, preferences, t } from "../services/userPreferences";
 
 export default {
   name: "ProfileView",
   data() {
     return {
-      user: { username: "", fullName: "", email: "", avatarUrl: "" },
+      user: { username: "", fullName: "", email: "", avatarUrl: "", theme: "light", language: "uk", lastSeenAt: null },
       loading: true,
       saving: false,
       message: "",
@@ -117,7 +134,8 @@ export default {
       touched: { username: false, fullName: false },
       avatarPreview: null,
       avatarFile: null,
-      avatarUploading: false
+      avatarUploading: false,
+      prefs: preferences
     };
   },
   computed: {
@@ -131,16 +149,16 @@ export default {
       const username = this.user.username.trim();
       const fullName = (this.user.fullName || "").replace(/\s+/g, " ").trim();
       if (this.touched.username) {
-        if (!username) e.username = "Введіть імʼя користувача";
-        else if (username.length < 3) e.username = "Мінімум 3 символи";
-        else if (username.length > 20) e.username = "Максимум 20 символів";
-        else if (!/^[a-zA-Z]+$/.test(username)) e.username = "Імʼя користувача має містити тільки англійські літери";
+        if (!username) e.username = t("registerUsernameRequired");
+        else if (username.length < 3) e.username = t("registerUsernameMin");
+        else if (username.length > 20) e.username = t("registerUsernameMax");
+        else if (!/^[a-zA-Z]+$/.test(username)) e.username = t("registerUsernameLatinOnly");
       }
       if (this.touched.fullName) {
-        if (!fullName) e.fullName = "Введіть повне імʼя";
-        else if (fullName.length < 2) e.fullName = "Мінімум 2 символи";
-        else if (fullName.length > 50) e.fullName = "Максимум 50 символів";
-        else if (!/^[a-zA-Z]+(?:[ '-][a-zA-Z]+)*$/.test(fullName)) e.fullName = "Повне імʼя має містити тільки англійські літери";
+        if (!fullName) e.fullName = t("registerFullNameRequired");
+        else if (fullName.length < 2) e.fullName = t("registerFullNameMin");
+        else if (fullName.length > 50) e.fullName = t("registerFullNameMax");
+        else if (!/^[a-zA-Z]+(?:[ '-][a-zA-Z]+)*$/.test(fullName)) e.fullName = t("registerFullNameLatinOnly");
       }
       return e;
     }
@@ -151,21 +169,29 @@ export default {
       const d = res.data;
       this.user = {
         ...d,
-        fullName: d.fullName || d.full_name || ""
+        fullName: d.fullName || d.full_name || "",
+        theme: d.theme || "light",
+        language: d.language || "uk",
+        lastSeenAt: d.lastSeenAt || null
       };
+      applyUserPreferences(this.user);
     } catch (err) {
       if (err.response?.status === 401) this.logout();
-      else this.error = "Не вдалося завантажити профіль";
+      else this.error = t("profileLoadFailed");
     } finally {
       this.loading = false;
     }
   },
   methods: {
+    t,
     normalizeUsername() {
       this.user.username = this.user.username.replace(/\s+/g, "");
     },
     normalizeFullName() {
       this.user.fullName = this.user.fullName.replace(/\s{2,}/g, " ");
+    },
+    applyCurrentPreferences() {
+      applyUserPreferences(this.user);
     },
     touch(field) {
       this.touched[field] = true;
@@ -183,9 +209,12 @@ export default {
         await api.patch("/user/profile", {
           username: this.user.username.trim(),
           fullName: this.user.fullName.replace(/\s+/g, " ").trim(),
-          full_name: this.user.fullName.replace(/\s+/g, " ").trim()
+          full_name: this.user.fullName.replace(/\s+/g, " ").trim(),
+          theme: this.user.theme,
+          language: this.user.language
         });
-        this.message = "Збережено ✓";
+        applyUserPreferences(this.user);
+        this.message = t("profileSaved");
         setTimeout(() => { this.message = ""; }, 3000);
       } catch (err) {
         if (err.response?.status === 401) {
@@ -201,9 +230,9 @@ export default {
             status === 409 ||
             status === 500
           ) {
-            this.error = `Користувач з іменем "${this.user.username}" вже існує`;
+            this.error = t("profileUsernameExists", { username: this.user.username });
           } else {
-            this.error = err.response?.data?.message || "Помилка оновлення";
+            this.error = err.response?.data?.message || t("profileUpdateError");
           }
         }
       } finally {
@@ -250,10 +279,10 @@ export default {
         this.user.avatarUrl = res.data.avatarUrl;
         this.avatarPreview = null;
         this.avatarFile = null;
-        this.message = "Аватарку збережено ✓";
+        this.message = t("profileAvatarSaved");
         setTimeout(() => { this.message = ""; }, 3000);
       } catch (e) {
-        this.error = "Не вдалося завантажити аватарку";
+        this.error = t("profileAvatarUploadFailed");
       } finally {
         this.avatarUploading = false;
       }
@@ -441,6 +470,21 @@ input {
   color: #111;
   outline: none;
   transition: border-color 0.15s, background 0.15s;
+}
+select {
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 1px solid #e4e4e4;
+  background: #f9f9f9;
+  font-size: 14px;
+  font-family: inherit;
+  color: #111;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+select:focus {
+  border-color: #111;
+  background: #fff;
 }
 input::placeholder { color: #ccc; }
 input:focus {

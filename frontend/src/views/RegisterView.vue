@@ -1,7 +1,7 @@
 <template>
   <div class="auth-container">
     <div class="auth-form">
-      <h2>Реєстрація</h2>
+      <h2>{{ t("registerTitle") }}</h2>
 
       <div class="field">
         <input
@@ -9,10 +9,10 @@
           @blur="touch('username')"
           @input="normalizeUsername"
           type="text"
-          placeholder="Імʼя користувача, наприклад taras"
+          :placeholder="t('registerUsernamePlaceholder')"
           :class="{ 'input-error': errors.username || username.length > 20 }"
         />
-        <span v-if="username.length > 20" class="field-error">Максимум 20 символів</span>
+        <span v-if="username.length > 20" class="field-error">{{ t("registerUsernameMax") }}</span>
         <span v-else-if="errors.username" class="field-error">{{ errors.username }}</span>
       </div>
 
@@ -22,7 +22,7 @@
           @blur="touch('fullName')"
           @input="normalizeFullName"
           type="text"
-          placeholder="Повне імʼя, наприклад Taras Shevchenko"
+          :placeholder="t('registerFullNamePlaceholder')"
           :class="{ 'input-error': errors.fullName }"
         />
         <span v-if="errors.fullName" class="field-error">{{ errors.fullName }}</span>
@@ -38,7 +38,7 @@
           :class="{ 'input-error': errors.email }"
         />
         <span v-if="errors.email" class="field-error">{{ errors.email }}</span>
-        <span v-else class="field-hint">Вкажіть адресу Gmail, наприклад user@gmail.com</span>
+        <span v-else class="field-hint">{{ t("registerEmailHint") }}</span>
       </div>
 
       <div class="field">
@@ -46,11 +46,11 @@
           v-model="password"
           @blur="touch('password')"
           type="password"
-          placeholder="Пароль"
+          :placeholder="t('registerPasswordPlaceholder')"
           :class="{ 'input-error': errors.password }"
         />
         <span v-if="errors.password" class="field-error">{{ errors.password }}</span>
-        <span v-else class="field-hint">Мін. 8 символів, велика літера, мала літера і цифра</span>
+        <span v-else class="field-hint">{{ t("registerPasswordHint") }}</span>
       </div>
 
       <div class="field">
@@ -58,14 +58,14 @@
           v-model="confirmPassword"
           @blur="touch('confirmPassword')"
           type="password"
-          placeholder="Підтвердіть пароль"
+          :placeholder="t('registerConfirmPasswordPlaceholder')"
           :class="{ 'input-error': errors.confirmPassword }"
         />
         <span v-if="errors.confirmPassword" class="field-error">{{ errors.confirmPassword }}</span>
       </div>
 
       <button @click="register" :disabled="loading">
-        {{ loading ? 'Завантаження...' : 'Зареєструватися' }}
+        {{ loading ? t("commonLoading") : t("registerSubmit") }}
       </button>
 
             <div v-if="serverError" class="msg-banner msg-error">
@@ -74,7 +74,7 @@
         </div>
 
       <a href="#" @click.prevent="goToLogin">
-        Вже є акаунт? Увійти
+        {{ t("registerHaveAccount") }}
       </a>
     </div>
   </div>
@@ -82,6 +82,7 @@
 
 <script>
 import axios from "axios";
+import { t } from "../services/userPreferences";
 
 export default {
   name: "RegisterView",
@@ -104,38 +105,39 @@ export default {
       const fullName = this.fullName.replace(/\s+/g, " ").trim();
       const email = this.email.trim().toLowerCase();
       if (this.touched.username) {
-        if (!username) e.username = "Введіть імʼя користувача";
-        else if (username.length < 3) e.username = "Мінімум 3 символи";
-        else if (username.length > 20) e.username = "Максимум 20 символів";
-        else if (!/^[a-zA-Z]+$/.test(username)) e.username = "Імʼя користувача має містити тільки англійські літери";
+        if (!username) e.username = t("registerUsernameRequired");
+        else if (username.length < 3) e.username = t("registerUsernameMin");
+        else if (username.length > 20) e.username = t("registerUsernameMax");
+        else if (!/^[a-zA-Z]+$/.test(username)) e.username = t("registerUsernameLatinOnly");
       }
       if (this.touched.fullName) {
-        if (!fullName) e.fullName = "Введіть повне імʼя";
-        else if (fullName.length < 2) e.fullName = "Мінімум 2 символи";
-        else if (fullName.length > 50) e.fullName = "Максимум 50 символів";
-        else if (!/^[a-zA-Z]+(?:[ '-][a-zA-Z]+)*$/.test(fullName)) e.fullName = "Повне імʼя має містити тільки англійські літери";
+        if (!fullName) e.fullName = t("registerFullNameRequired");
+        else if (fullName.length < 2) e.fullName = t("registerFullNameMin");
+        else if (fullName.length > 50) e.fullName = t("registerFullNameMax");
+        else if (!/^[a-zA-Z]+(?:[ '-][a-zA-Z]+)*$/.test(fullName)) e.fullName = t("registerFullNameLatinOnly");
       }
       if (this.touched.email) {
-        if (!email) e.email = "Введіть email";
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = "Невірний формат email";
-        else if (!/@gmail\.com$/i.test(email)) e.email = "Використайте адресу Gmail";
+        if (!email) e.email = t("registerEmailRequired");
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email = t("registerEmailInvalid");
+        else if (!/@gmail\.com$/i.test(email)) e.email = t("registerEmailGmailOnly");
       }
       if (this.touched.password) {
-        if (!this.password) e.password = "Введіть пароль";
-        else if (this.password.length < 8) e.password = "Мінімум 8 символів";
-        else if (!/[A-Z]/.test(this.password)) e.password = "Потрібна хоча б одна велика літера";
-        else if (!/[a-z]/.test(this.password)) e.password = "Потрібна хоча б одна мала літера";
-        else if (!/[0-9]/.test(this.password)) e.password = "Потрібна хоча б одна цифра";
-        else if (/\s/.test(this.password)) e.password = "Пароль не повинен містити пробіли";
+        if (!this.password) e.password = t("registerPasswordRequired");
+        else if (this.password.length < 8) e.password = t("registerPasswordMin");
+        else if (!/[A-Z]/.test(this.password)) e.password = t("registerPasswordUpper");
+        else if (!/[a-z]/.test(this.password)) e.password = t("registerPasswordLower");
+        else if (!/[0-9]/.test(this.password)) e.password = t("registerPasswordDigit");
+        else if (/\s/.test(this.password)) e.password = t("registerPasswordNoSpaces");
       }
       if (this.touched.confirmPassword) {
-        if (!this.confirmPassword) e.confirmPassword = "Підтвердіть пароль";
-        else if (this.confirmPassword !== this.password) e.confirmPassword = "Паролі не збігаються";
+        if (!this.confirmPassword) e.confirmPassword = t("registerConfirmRequired");
+        else if (this.confirmPassword !== this.password) e.confirmPassword = t("registerConfirmMismatch");
       }
       return e;
     }
   },
   methods: {
+    t,
     normalizeUsername() {
       this.username = this.username.replace(/\s+/g, "");
     },
@@ -167,15 +169,15 @@ export default {
       } catch (err) {
         const msg = (err.response?.data?.message || "").toLowerCase();
         if (err.response?.status === 400) {
-          this.serverError = err.response?.data?.message || "Невірні дані. Перевірте введення.";
+          this.serverError = err.response?.data?.message || t("registerInvalidData");
         } else if (msg.includes("username") || (msg.includes("user") && msg.includes("exist"))) {
-          this.serverError = `Користувач з іменем "${this.username}" вже існує`;
+          this.serverError = t("registerUserExists", { username: this.username });
         } else if (msg.includes("email") || msg.includes("mail")) {
-          this.serverError = `Пошта "${this.email}" вже використовується`;
+          this.serverError = t("registerEmailUsed", { email: this.email });
         } else if (err.response?.status === 500 || err.response?.status === 409) {
-          this.serverError = `Користувач з іменем "${this.username}" вже існує`;
+          this.serverError = t("registerUserExists", { username: this.username });
         } else {
-          this.serverError = "Помилка реєстрації. Спробуйте ще раз.";
+          this.serverError = t("registerGenericError");
         }
       } finally {
         this.loading = false;

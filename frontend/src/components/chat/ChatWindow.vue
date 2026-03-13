@@ -40,7 +40,7 @@ export default {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: #f9f9f9;
+  background: var(--app-bg);
 }
 
 .messages {
@@ -71,15 +71,15 @@ export default {
 }
 
 .own {
-  background: #d0e8ff;
-  color: #111111;
+  background: var(--msg-own-bg);
+  color: var(--msg-own-color);
   align-self: flex-end;
   border-bottom-right-radius: 4px;
 }
 
 .other {
-  background: #ffffff;
-  color: #111111;
+  background: var(--msg-other-bg);
+  color: var(--msg-other-color);
   align-self: flex-start;
   border-bottom-left-radius: 4px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.06);
@@ -89,8 +89,8 @@ export default {
   display: flex;
   align-items: center;
   padding: 16px 24px;
-  background: #ffffff;
-  border-top: 1px solid #ebebeb;
+  background: var(--panel-bg);
+  border-top: 1px solid var(--border-color);
   gap: 12px;
 }
 
@@ -98,13 +98,13 @@ input {
   flex: 1;
   padding: 11px 18px;
   border-radius: 22px;
-  border: 1px solid #e4e4e4;
-  background: #f7f7f7;
+  border: 1px solid var(--border-color);
+  background: var(--panel-soft);
   font-size: 14px;
   font-family: inherit;
   outline: none;
   transition: all 0.15s;
-  color: #111111;
+  color: var(--app-text);
 }
 
 input::placeholder {
@@ -113,7 +113,7 @@ input::placeholder {
 
 input:focus {
   border-color: #bbbbbb;
-  background: #ffffff;
+  background: var(--panel-bg);
 }
 
 button {
