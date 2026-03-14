@@ -6,7 +6,8 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 @Data
-public class UserCredentialsDto {
+public class ForgotPasswordRequestDto {
+
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
     @Pattern(
@@ -14,7 +15,4 @@ public class UserCredentialsDto {
             message = "Некоректний формат пошти. Використовуйте gmail.com адресу"
     )
     private String email;
-
-    @NotBlank(message = "Password is required")
-    private String password;
 }

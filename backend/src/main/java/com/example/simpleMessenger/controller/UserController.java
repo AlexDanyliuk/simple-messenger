@@ -87,5 +87,11 @@ public class UserController {
         return userService.updateProfile(updateUserDto);
     }
 
+    @PatchMapping("/password")
+    public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordDto changePasswordDto) throws Exception {
+        userService.changePassword(changePasswordDto);
+        return ResponseEntity.ok().build();
+    }
+
 
 }

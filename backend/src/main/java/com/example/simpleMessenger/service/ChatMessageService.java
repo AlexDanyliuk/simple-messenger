@@ -11,4 +11,6 @@ public interface ChatMessageService {
     List<ChatMessage> findChatMessages(Long senderId, Long recipientId);
     void markAsRead(Long senderId, Long recipientId);
     void editMessage(Long messageId, String newContent, Long requesterId);
+    void toggleReaction(Long messageId, String emoji, Long requesterId);
+    void togglePin(Long messageId, boolean pinned, Long requesterId);
 }

@@ -77,11 +77,11 @@ export default {
 }
 
 .modal-card {
-  background: #fff;
+  background: var(--panel-bg);
   border-radius: 18px;
   padding: 32px 28px 28px;
   width: 320px;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+  box-shadow: var(--shadow-xl);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -101,20 +101,20 @@ export default {
   background: none;
   border: none;
   cursor: pointer;
-  color: #aaa;
+  color: var(--text-tertiary);
   padding: 4px;
   border-radius: 6px;
   display: flex;
   align-items: center;
   transition: color 0.12s, background 0.12s;
 }
-.modal-close:hover { color: #111; background: #f0f0f0; }
+.modal-close:hover { color: var(--app-text); background: var(--panel-bg-soft); }
 
 .modal-avatar {
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: #111;
+  background: var(--accent);
   color: #fff;
   font-size: 26px;
   font-weight: 700;
@@ -136,7 +136,7 @@ export default {
 .modal-name {
   font-size: 18px;
   font-weight: 700;
-  color: #111;
+  color: var(--app-text);
   margin-bottom: 20px;
 }
 
@@ -147,7 +147,7 @@ export default {
   gap: 0;
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid #f0f0f0;
+  border: 1px solid var(--border-color);
 }
 
 .modal-row {
@@ -155,8 +155,8 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background: #fafafa;
-  border-bottom: 1px solid #f0f0f0;
+  background: var(--panel-bg-soft);
+  border-bottom: 1px solid var(--border-color);
 }
 .modal-row:last-child { border-bottom: none; }
 
@@ -166,14 +166,14 @@ export default {
   gap: 6px;
   font-size: 12px;
   font-weight: 600;
-  color: #aaa;
+  color: var(--text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
 
 .modal-value {
   font-size: 14px;
-  color: #111;
+  color: var(--app-text);
   font-weight: 500;
 }
 

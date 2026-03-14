@@ -3,6 +3,7 @@ import { defineComponent, h } from "vue";
 import { t } from "../services/userPreferences";
 import LoginView    from "../views/LoginView.vue";
 import RegisterView from "../views/RegisterView.vue";
+import ForgotPasswordView from "../views/ForgotPasswordView.vue";
 import ProfileView  from "../views/ProfileView.vue";
 import ChatLayout   from "../layouts/ChatLayout.vue";
 import ChatView     from "../views/ChatView.vue";
@@ -26,6 +27,7 @@ const routes = [
 
   { path: "/login",    component: LoginView    },
   { path: "/register", component: RegisterView },
+  { path: "/forgot-password", component: ForgotPasswordView },
   { path: "/profile",  component: ProfileView, meta: { requiresAuth: true }  },
 
   {
@@ -53,12 +55,12 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
-  const shouldCheckSession = requiresAuth || to.path === "/login" || to.path === "/register";
+  const shouldCheckSession = requiresAuth || to.path === "/login" || to.path === "/register" || to.path === "/forgot-password";
   const isLoggedIn = shouldCheckSession ? await hasActiveSession() : false;
 
   if (requiresAuth && !isLoggedIn) {
     next("/login");
-  } else if ((to.path === "/login" || to.path === "/register") && isLoggedIn) {
+  } else if ((to.path === "/login" || to.path === "/register" || to.path === "/forgot-password") && isLoggedIn) {
     next("/profile");
   } else {
     next();

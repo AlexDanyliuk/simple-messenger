@@ -2,9 +2,7 @@ package com.example.simpleMessenger.service;
 
 
 import com.example.simpleMessenger.dto.*;
-import com.example.simpleMessenger.entity.Status;
 import com.example.simpleMessenger.entity.User;
-import org.jspecify.annotations.Nullable;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.naming.AuthenticationException;
@@ -44,5 +42,13 @@ public interface UserService {
     User setUserOnline(String email);
 
     User setUserOffline(String email);
+
+    void changePassword(ChangePasswordDto changePasswordDto) throws AuthenticationException;
+
+    ForgotPasswordRequestResponseDto requestPasswordReset(ForgotPasswordRequestDto forgotPasswordRequestDto);
+
+    void confirmPasswordReset(ForgotPasswordConfirmDto forgotPasswordConfirmDto) throws AuthenticationException;
+
+    ForgotPasswordRequestResponseDto requestRegistrationVerificationCode(RegistrationVerificationRequestDto requestDto);
 
 }

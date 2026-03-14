@@ -43,6 +43,8 @@ public class WebSocketEventListener {
                         user.getStatus().name(),
                         user.getLastSeenAt()
                 )
+
+
         );
 
         System.out.println("User ONLINE: " + user.getUsername());

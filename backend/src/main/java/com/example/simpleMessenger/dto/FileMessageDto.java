@@ -5,9 +5,8 @@ import lombok.*;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ChatMessageDto {
+public class FileMessageDto {
     private Long recipientId;
-    private String content;
     private String fileUrl;
     private String fileName;
     private String fileType;

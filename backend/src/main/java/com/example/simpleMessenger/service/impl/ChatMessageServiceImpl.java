@@ -15,7 +15,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Service
 public class ChatMessageServiceImpl implements ChatMessageService {
@@ -44,6 +47,14 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         chatMessage.setTimestamp(new Date());
         chatMessage.setRead(false);
 
+        // Set file metadata if present
+        if (dto.getFileUrl() != null && !dto.getFileUrl().isBlank()) {
+            chatMessage.setFileUrl(dto.getFileUrl());
+            chatMessage.setFileName(dto.getFileName());
+            chatMessage.setFileType(dto.getFileType());
+            chatMessage.setFileSize(dto.getFileSize());
+        }
+
         ChatMessage saved = saveChatMessage(chatMessage);
 
         messagingTemplate.convertAndSend("/topic/chat/" + saved.getChatId(), saved);
@@ -64,12 +75,15 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         );
 
         UserListDto recipientDto = userService.getUserListDtoById(dto.getRecipientId());
-        recipientDto.setLastMessage(saved.getContent());
+        String lastMessage = saved.getContent() != null && !saved.getContent().isBlank() 
+                ? saved.getContent() 
+                : (saved.getFileName() != null ? "📎 " + saved.getFileName() : "Message");
+        recipientDto.setLastMessage(lastMessage);
         recipientDto.setLastMessageTime(saved.getTimestamp());
         recipientDto.setUnreadCount(0);
 
         UserListDto senderDto = userService.getUserListDtoById(senderId);
-        senderDto.setLastMessage(saved.getContent());
+        senderDto.setLastMessage(lastMessage);
         senderDto.setLastMessageTime(saved.getTimestamp());
         senderDto.setUnreadCount(unreadForRecipient);
 
@@ -127,7 +141,10 @@ public class ChatMessageServiceImpl implements ChatMessageService {
                         senderId, recipientId, recipientId, senderId
                 )
                 .ifPresent(msg -> {
-                    senderDto.setLastMessage(msg.getContent());
+                    String lastMessage = msg.getContent() != null && !msg.getContent().isBlank()
+                            ? msg.getContent()
+                            : (msg.getFileName() != null ? "📎 " + msg.getFileName() : "Message");
+                    senderDto.setLastMessage(lastMessage);
                     senderDto.setLastMessageTime(msg.getTimestamp());
                 });
 
@@ -151,6 +168,64 @@ public class ChatMessageServiceImpl implements ChatMessageService {
         messagingTemplate.convertAndSend(
                 "/topic/chat-edit/" + msg.getChatId(),
                 msg
+        );
+    }
+
+    @Override
+    @Transactional
+    public void toggleReaction(Long messageId, String emoji, Long requesterId) {
+        ChatMessage msg = chatMessageRepository.findById(messageId)
+                .orElseThrow(() -> new RuntimeException("Message not found"));
+
+        boolean participant = msg.getSenderId().equals(requesterId) || msg.getRecipientId().equals(requesterId);
+        if (!participant) {
+            throw new RuntimeException("Not allowed to react to this message");
+        }
+
+        String normalizedEmoji = emoji == null ? "" : emoji.trim();
+        if (normalizedEmoji.isBlank() || normalizedEmoji.length() > 8) {
+            throw new IllegalArgumentException("Invalid emoji");
+        }
+
+        Map<String, List<Long>> reactions = msg.getReactions();
+        Set<Long> users = new LinkedHashSet<>(reactions.getOrDefault(normalizedEmoji, List.of()));
+        if (!users.add(requesterId)) {
+            users.remove(requesterId);
+        }
+
+        if (users.isEmpty()) {
+            reactions.remove(normalizedEmoji);
+        } else {
+            reactions.put(normalizedEmoji, new ArrayList<>(users));
+        }
+
+        msg.setReactions(reactions);
+        ChatMessage saved = chatMessageRepository.save(msg);
+
+        messagingTemplate.convertAndSend(
+                "/topic/chat-reaction/" + saved.getChatId(),
+                saved
+        );
+    }
+
+    @Override
+    @Transactional
+    public void togglePin(Long messageId, boolean pinned, Long requesterId) {
+        ChatMessage msg = chatMessageRepository.findById(messageId)
+                .orElseThrow(() -> new RuntimeException("Message not found"));
+
+        // Allow both sender and recipient to pin/unpin messages in their chat
+        boolean isParticipant = msg.getSenderId().equals(requesterId) || msg.getRecipientId().equals(requesterId);
+        if (!isParticipant) {
+            throw new RuntimeException("Not allowed to pin/unpin this message");
+        }
+
+        msg.setPinned(pinned);
+        ChatMessage saved = chatMessageRepository.save(msg);
+
+        messagingTemplate.convertAndSend(
+                "/topic/chat-pin/" + saved.getChatId(),
+                saved
         );
     }
 }

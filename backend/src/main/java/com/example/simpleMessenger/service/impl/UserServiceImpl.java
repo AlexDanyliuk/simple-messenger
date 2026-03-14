@@ -14,6 +14,8 @@ import com.example.simpleMessenger.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -30,6 +32,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.security.SecureRandom;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -41,12 +46,32 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final SimpMessagingTemplate messagingTemplate;
     private final ChatMessageRepository chatMessageRepository;
+    private final JavaMailSender mailSender;
+    private final Map<String, ResetCodeState> passwordResetCodes = new ConcurrentHashMap<>();
+    private final Map<String, RegistrationCodeState> registrationVerificationCodes = new ConcurrentHashMap<>();
+    private final SecureRandom secureRandom = new SecureRandom();
 
     @Value("${app.upload.dir:uploads}")
     private String uploadDir;
 
+    @Value("${app.mail.from}")
+    private String mailFrom;
+
+    @Value("${app.mail.reset.subject}")
+    private String resetMailSubject;
+
+    @Value("${app.mail.reset.code-ttl-minutes:10}")
+    private long resetCodeTtlMinutes;
+
+    @Value("${app.mail.registration.subject}")
+    private String registrationMailSubject;
+
+    @Value("${app.mail.registration.code-ttl-minutes:10}")
+    private long registrationCodeTtlMinutes;
+
     @Override
     public JwtAuthenticationDto singIn(UserCredentialsDto userCredentialsDto) throws AuthenticationException {
+        userCredentialsDto.setEmail(normalizeEmail(userCredentialsDto.getEmail()));
         User user = findByCredentials(userCredentialsDto);
         return jwtService.generateAuthToken(user.getEmail());
     }
@@ -106,6 +131,9 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponseDto saveUser(UserRegisterDto registerDto) {
+        registerDto.setEmail(normalizeEmail(registerDto.getEmail()));
+        validateRegistrationCode(registerDto.getEmail(), registerDto.getVerificationCode());
+
         if (userRepository.existsByEmail(registerDto.getEmail())) {
             throw new EmailAlreadyExistsException(registerDto.getEmail());
         }
@@ -118,6 +146,8 @@ public class UserServiceImpl implements UserService {
         user.setTheme("light");
         user.setLanguage("uk");
         user.setLastSeenAt(new Date());
+
+        registrationVerificationCodes.remove(registerDto.getEmail());
         return userMapper.toUserResponseDto(userRepository.save(user));
     }
 
@@ -264,6 +294,92 @@ public class UserServiceImpl implements UserService {
         });
     }
 
+    @Override
+    @Transactional
+    public void changePassword(ChangePasswordDto changePasswordDto) throws AuthenticationException {
+        User user = getCurrentUser();
+
+        if (!passwordEncoder.matches(changePasswordDto.getCurrentPassword(), user.getPassword())) {
+            throw new AuthenticationException("Current password is incorrect");
+        }
+
+        if (passwordEncoder.matches(changePasswordDto.getNewPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("New password must be different from current password");
+        }
+
+        user.setPassword(passwordEncoder.encode(changePasswordDto.getNewPassword()));
+        userRepository.save(user);
+    }
+
+    @Override
+    public ForgotPasswordRequestResponseDto requestPasswordReset(ForgotPasswordRequestDto forgotPasswordRequestDto) {
+        String normalizedEmail = normalizeEmail(forgotPasswordRequestDto.getEmail());
+        forgotPasswordRequestDto.setEmail(normalizedEmail);
+
+        Optional<User> user = userRepository.findByEmail(normalizedEmail);
+        if (user.isEmpty()) {
+            return new ForgotPasswordRequestResponseDto(
+                "If an account exists for this email, a reset code was sent"
+            );
+        }
+
+        String code = String.format("%06d", secureRandom.nextInt(1_000_000));
+        long ttlMs = resetCodeTtlMinutes * 60 * 1000;
+        passwordResetCodes.put(normalizedEmail, new ResetCodeState(code, System.currentTimeMillis() + ttlMs));
+
+        sendResetEmail(normalizedEmail, code);
+
+        return new ForgotPasswordRequestResponseDto(
+            "If an account exists for this email, a reset code was sent"
+        );
+    }
+
+    @Override
+    public ForgotPasswordRequestResponseDto requestRegistrationVerificationCode(RegistrationVerificationRequestDto requestDto) {
+        String normalizedEmail = normalizeEmail(requestDto.getEmail());
+        requestDto.setEmail(normalizedEmail);
+
+        if (userRepository.existsByEmail(normalizedEmail)) {
+            throw new EmailAlreadyExistsException(normalizedEmail);
+        }
+
+        String code = String.format("%06d", secureRandom.nextInt(1_000_000));
+        long ttlMs = registrationCodeTtlMinutes * 60 * 1000;
+        registrationVerificationCodes.put(normalizedEmail, new RegistrationCodeState(code, System.currentTimeMillis() + ttlMs));
+
+        sendRegistrationVerificationEmail(normalizedEmail, code);
+
+        return new ForgotPasswordRequestResponseDto(
+                "Verification code sent to your email"
+        );
+    }
+
+    @Override
+    @Transactional
+    public void confirmPasswordReset(ForgotPasswordConfirmDto forgotPasswordConfirmDto) throws AuthenticationException {
+        String normalizedEmail = normalizeEmail(forgotPasswordConfirmDto.getEmail());
+        forgotPasswordConfirmDto.setEmail(normalizedEmail);
+
+        ResetCodeState state = passwordResetCodes.get(normalizedEmail);
+        if (state == null) {
+            throw new AuthenticationException("Reset code was not requested");
+        }
+        if (System.currentTimeMillis() > state.expiresAt()) {
+            passwordResetCodes.remove(normalizedEmail);
+            throw new AuthenticationException("Reset code expired");
+        }
+        if (!state.code().equals(forgotPasswordConfirmDto.getCode())) {
+            throw new AuthenticationException("Invalid reset code");
+        }
+
+        User user = userRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() -> new AuthenticationException("User not found"));
+
+        user.setPassword(passwordEncoder.encode(forgotPasswordConfirmDto.getNewPassword()));
+        userRepository.save(user);
+        passwordResetCodes.remove(normalizedEmail);
+    }
+
     private User getCurrentUser() {
         String email = ((UserDetails) SecurityContextHolder
                 .getContext()
@@ -295,4 +411,63 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new Exception("User not found"));
     }
+
+    private String normalizeEmail(String email) {
+        return email == null ? null : email.trim().toLowerCase();
+    }
+
+    private void sendResetEmail(String recipient, String code) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(mailFrom);
+            message.setTo(recipient);
+            message.setSubject(resetMailSubject);
+            message.setText(buildResetEmailBody(code));
+            mailSender.send(message);
+        } catch (Exception ex) {
+            throw new IllegalStateException("Failed to send reset email");
+        }
+    }
+
+    private String buildResetEmailBody(String code) {
+        return "Your Simple Messenger reset code is: " + code + "\n\n"
+                + "This code is valid for " + resetCodeTtlMinutes + " minutes.\n"
+                + "If you did not request a password reset, ignore this email.";
+    }
+
+    private void sendRegistrationVerificationEmail(String recipient, String code) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(mailFrom);
+            message.setTo(recipient);
+            message.setSubject(registrationMailSubject);
+            message.setText(buildRegistrationVerificationEmailBody(code));
+            mailSender.send(message);
+        } catch (Exception ex) {
+            throw new IllegalStateException("Failed to send registration verification email");
+        }
+    }
+
+    private String buildRegistrationVerificationEmailBody(String code) {
+        return "Your Simple Messenger registration verification code is: " + code + "\n\n"
+                + "This code is valid for " + registrationCodeTtlMinutes + " minutes.\n"
+                + "If you did not request this code, ignore this email.";
+    }
+
+    private void validateRegistrationCode(String email, String code) {
+        RegistrationCodeState state = registrationVerificationCodes.get(email);
+        if (state == null) {
+            throw new IllegalArgumentException("Verification code was not requested");
+        }
+        if (System.currentTimeMillis() > state.expiresAt()) {
+            registrationVerificationCodes.remove(email);
+            throw new IllegalArgumentException("Verification code expired");
+        }
+        if (!state.code().equals(code)) {
+            throw new IllegalArgumentException("Invalid verification code");
+        }
+    }
+
+    private record ResetCodeState(String code, long expiresAt) {}
+    private record RegistrationCodeState(String code, long expiresAt) {}
 }

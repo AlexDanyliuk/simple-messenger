@@ -83,6 +83,24 @@ export function sendEdit(payload) {
   });
 }
 
+/** payload: { messageId: Number, emoji: String } */
+export function sendReaction(payload) {
+  if (!connected) return;
+  stompClient.publish({
+    destination: "/app/chat.reaction",
+    body: JSON.stringify(payload)
+  });
+}
+
+/** payload: { messageId: Number, pinned: Boolean } */
+export function sendPin(payload) {
+  if (!connected) return;
+  stompClient.publish({
+    destination: "/app/chat.pin",
+    body: JSON.stringify(payload)
+  });
+}
+
 export function disconnect() {
   if (stompClient) {
     stompClient.deactivate();

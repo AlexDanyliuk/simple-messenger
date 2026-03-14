@@ -5,8 +5,8 @@
       <div class="sidebar-header">
         <div class="search-wrap" :class="{ 'search-active': searchQuery }">
           <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none">
-            <circle cx="11" cy="11" r="7" stroke="#999" stroke-width="2"/>
-            <path d="M16.5 16.5L21 21" stroke="#999" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+            <path d="M16.5 16.5L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
           <input
             ref="searchInput"
@@ -55,7 +55,7 @@
         </div>
         <div class="user-chevron">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-            <path d="M8 9l4-4 4 4M8 15l4 4 4-4" stroke="#aaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8 9l4-4 4 4M8 15l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </div>
       </div>
@@ -78,8 +78,8 @@
           <div class="popup-menu">
             <div class="popup-item" @click="goToProfile">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="8" r="4" stroke="#555" stroke-width="2"/>
-                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#555" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/>
+                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
               </svg>
               {{ t("chatEditProfile") }}
             </div>
@@ -283,50 +283,49 @@ export default {
 .chat-layout {
   display: flex;
   height: 100vh;
-  background: #ffffff;
+  background: var(--app-bg);
   font-family: inherit;
   overflow: hidden;
 }
 
 .sidebar {
-  width: 280px;
-  min-width: 280px;
-  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
-  border-right: 1px solid #e8eef5;
+  width: 300px;
+  min-width: 300px;
+  background: var(--panel-bg);
+  border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   position: relative;
-  box-shadow: 10px 0 30px rgba(15, 23, 42, 0.035);
+  box-shadow: inset -1px 0 0 var(--border-color);
 }
 
 .sidebar-header {
-  padding: 12px 14px 10px;
-  border-bottom: 1px solid #eef2f7;
+  padding: 14px;
+  border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
-  backdrop-filter: blur(12px);
 }
 
 .search-wrap {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 7px 10px;
-  transition: background 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+  background: var(--panel-bg-soft);
+  border: 1.5px solid var(--border-color);
+  border-radius: 10px;
+  padding: 8px 12px;
+  transition: all 0.2s ease;
 }
 
 .search-wrap.search-active,
 .search-wrap:focus-within {
-  background: #ffffff;
-  border-color: #cbd5e1;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07), 0 0 0 4px rgba(148, 163, 184, 0.12);
-  transform: translateY(-1px);
+  background: var(--app-bg-secondary);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .search-icon {
   flex-shrink: 0;
+  color: var(--text-tertiary);
 }
 
 .search-input {
@@ -334,29 +333,34 @@ export default {
   border: none;
   background: transparent;
   outline: none;
-  font-size: 13px;
-  color: #111;
+  font-size: 14px;
+  color: var(--app-text);
   min-width: 0;
 }
 
 .search-input::placeholder {
-  color: #bbb;
+  color: var(--text-tertiary);
 }
 
 .search-clear {
   background: none;
   border: none;
   cursor: pointer;
-  color: #aaa;
-  font-size: 12px;
+  color: var(--text-tertiary);
+  font-size: 16px;
   padding: 0;
   line-height: 1;
   flex-shrink: 0;
-  transition: color 0.12s;
+  transition: color 0.2s ease;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .search-clear:hover {
-  color: #555;
+  color: var(--app-text);
 }
 
 .search-results {
@@ -366,53 +370,60 @@ export default {
 }
 
 .search-results::-webkit-scrollbar {
-  width: 3px;
+  width: 6px;
+}
+
+.search-results::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .search-results::-webkit-scrollbar-thumb {
-  background: #e0e0e0;
-  border-radius: 4px;
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.search-results::-webkit-scrollbar-thumb:hover {
+  background: var(--border-color-strong);
 }
 
 .search-state {
-  padding: 22px 20px;
+  padding: 24px 20px;
   text-align: center;
-  font-size: 13px;
-  color: #94a3b8;
+  font-size: 14px;
+  color: var(--text-tertiary);
 }
 
 .user-footer {
   display: flex;
   align-items: center;
-  padding: 14px 18px;
-  border-top: 1px solid #e8eef5;
+  padding: 12px 14px;
+  border-top: 1px solid var(--border-color);
   cursor: pointer;
-  transition: background 0.18s ease, transform 0.18s ease;
+  transition: background 0.2s ease;
   flex-shrink: 0;
   gap: 10px;
-  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  background: var(--panel-bg);
   user-select: none;
 }
 
 .user-footer:hover {
-  background: linear-gradient(180deg, #ffffff 0%, #f7fafc 100%);
-  transform: translateY(-1px);
+  background: var(--panel-bg-hover);
 }
 
 .user-avatar {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+  background: var(--accent);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 16px;
   flex-shrink: 0;
   overflow: hidden;
-  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.16);
+  box-shadow: 0 2px 8px rgba(100, 156, 43, 0.25);
 }
 
 .user-avatar-img {
@@ -420,7 +431,6 @@ export default {
   height: 100%;
   object-fit: cover;
   display: block;
-  border-radius: 50%;
 }
 
 .user-info {
@@ -429,9 +439,9 @@ export default {
 }
 
 .user-name {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
-  color: #111111;
+  color: var(--app-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -441,36 +451,43 @@ export default {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 11px;
-  color: #999999;
+  font-size: 12px;
+  color: var(--text-tertiary);
   margin-top: 2px;
 }
 
 .status-dot {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: #4caf50;
+  background: var(--online-dot);
   flex-shrink: 0;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
 .user-chevron {
   display: flex;
   align-items: center;
   flex-shrink: 0;
+  color: var(--text-tertiary);
 }
 
 .profile-popup {
   position: absolute;
   bottom: 70px;
   left: 12px;
-  width: 244px;
-  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
-  border-radius: 18px;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.16), 0 4px 14px rgba(15, 23, 42, 0.08);
+  width: 260px;
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: var(--shadow-xl);
   z-index: 200;
   overflow: hidden;
-  border: 1px solid #e8eef5;
   transform-origin: bottom left;
 }
 
@@ -485,7 +502,7 @@ export default {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #111111;
+  background: var(--accent);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -494,6 +511,7 @@ export default {
   font-size: 18px;
   flex-shrink: 0;
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(100, 156, 43, 0.25);
 }
 
 .popup-avatar-img {
@@ -501,25 +519,25 @@ export default {
   height: 100%;
   object-fit: cover;
   display: block;
-  border-radius: 50%;
 }
 
 .popup-user-info {
   min-width: 0;
+  flex: 1;
 }
 
 .popup-name {
   font-size: 14px;
   font-weight: 600;
-  color: #111111;
+  color: var(--app-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .popup-email {
-  font-size: 11px;
-  color: #aaaaaa;
+  font-size: 12px;
+  color: var(--text-tertiary);
   margin-top: 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -528,7 +546,7 @@ export default {
 
 .popup-divider {
   height: 1px;
-  background: #f0f0f0;
+  background: var(--border-color);
 }
 
 .popup-menu {
@@ -541,23 +559,30 @@ export default {
   gap: 10px;
   padding: 10px 12px;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
-  color: #333333;
+  color: var(--app-text);
   cursor: pointer;
-  transition: background 0.12s;
+  transition: all 0.2s ease;
 }
 
 .popup-item:hover {
-  background: #f5f5f5;
+  background: var(--panel-bg-hover);
+}
+
+.popup-item svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
 }
 
 .popup-item--danger {
-  color: #cc2200;
+  color: var(--error);
 }
 
 .popup-item--danger:hover {
-  background: #fff4f2;
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .chat-content {
@@ -570,7 +595,7 @@ export default {
 
 .popup-enter-active,
 .popup-leave-active {
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition: all 0.15s ease;
 }
 
 .popup-enter-from,
@@ -581,17 +606,65 @@ export default {
 
 @media (max-width: 768px) {
   .sidebar {
-    width: 200px;
-    min-width: 200px;
-    max-height: none;
-    border-right: 1px solid #ebebeb;
-    border-bottom: none;
-    order: initial;
+    width: 240px;
+    min-width: 240px;
   }
 
-  .chat-content {
-    order: initial;
-    flex: 1;
+  .sidebar-header {
+    padding: 12px;
+  }
+
+  .search-input {
+    font-size: 13px;
+  }
+
+  .user-footer {
+    padding: 10px 12px;
+  }
+
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .user-name {
+    font-size: 13px;
+  }
+
+  .user-status {
+    font-size: 11px;
+  }
+
+  .profile-popup {
+    width: 220px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 100%;
+    min-width: 80px;
+    max-width: 200px;
+    position: absolute;
+    left: -100%;
+    top: 0;
+    height: 100%;
+    z-index: 100;
+    transition: left 0.3s ease;
+    border-right: 1px solid var(--border-color);
+  }
+
+  .chat-layout:has(.sidebar:hover) .sidebar {
+    left: 0;
+  }
+
+  .sidebar-header {
+    padding: 10px;
+  }
+
+  .search-wrap {
+    padding: 6px 10px;
   }
 
   .search-input {
@@ -599,121 +672,58 @@ export default {
   }
 
   .user-footer {
-    padding: 10px 14px;
-  }
-
-  .user-info {
-    display: flex;
+    padding: 8px 10px;
   }
 
   .user-avatar {
     width: 32px;
     height: 32px;
-    font-size: 11px;
+    font-size: 12px;
+  }
+
+  .user-name {
+    font-size: 12px;
+  }
+
+  .user-status {
+    font-size: 10px;
   }
 
   .user-chevron {
     display: none;
   }
 
-  .user-name {
-    font-size: 11px;
-  }
-
-  .user-status {
-    font-size: 9px;
-  }
-
-  .profile-popup {
-    bottom: 60px;
-    left: 8px;
-    width: 180px;
-  }
-}
-
-@media (max-width: 480px) {
-  .sidebar {
-    width: 120px;
-    min-width: 120px;
-  }
-
-  .sidebar-header {
-    padding: 8px 10px 6px;
-  }
-
-  .search-wrap {
-    padding: 5px 6px;
-  }
-
-  .search-input {
-    font-size: 11px;
-  }
-
-  .search-clear {
-    font-size: 10px;
-  }
-
-  .search-results {
-    padding: 4px 0;
-  }
-
-  .user-footer {
-    padding: 8px 10px;
-    gap: 6px;
-  }
-
-  .user-avatar {
-    width: 28px;
-    height: 28px;
-    font-size: 10px;
-  }
-
-  .user-name {
-    font-size: 10px;
-  }
-
-  .user-status {
-    font-size: 8px;
-  }
-
-  .status-dot {
-    width: 5px;
-    height: 5px;
-  }
-
   .search-state {
-    padding: 12px;
-    font-size: 10px;
+    padding: 16px;
+    font-size: 12px;
   }
 
   .profile-popup {
-    bottom: 50px;
-    left: 4px;
-    width: 160px;
+    width: 180px;
   }
 
   .popup-header {
-    padding: 10px;
+    padding: 12px;
   }
 
   .popup-avatar {
-    width: 36px;
-    height: 36px;
-    font-size: 14px;
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
   }
 
   .popup-name {
-    font-size: 11px;
+    font-size: 12px;
   }
 
   .popup-email {
-    font-size: 9px;
+    font-size: 11px;
   }
 
   .popup-item {
-    padding: 8px 8px;
-    font-size: 10px;
-    gap: 6px;
+    padding: 8px 10px;
+    font-size: 12px;
+    gap: 8px;
   }
 }
 </style>

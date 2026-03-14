@@ -37,4 +37,8 @@ public class UserRegisterDto {
     @Size(min = 8, message = "Password must be at least 8 characters")
     private String password;
 
+    @NotBlank(message = "Email verification code is required")
+    @Pattern(regexp = "^\\d{6}$", message = "Verification code must contain 6 digits")
+    private String verificationCode;
+
 }

@@ -1,7 +1,7 @@
 <template>
   <div class="input-area">
     <div class="clip-icon">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" stroke="#aaa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </div>
     <input
       v-model="text"
@@ -32,13 +32,13 @@ export default {
   display: flex;
   align-items: center;
   padding: 16px 24px;
-  background: #ffffff;
-  border-top: 1px solid #ebebeb;
+  background: var(--panel-bg);
+  border-top: 1px solid var(--border-color);
   gap: 12px;
 }
 
 .clip-icon {
-  color: #aaaaaa;
+  color: var(--text-tertiary);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -47,36 +47,36 @@ export default {
 }
 
 .clip-icon:hover {
-  color: #555555;
+  color: var(--text-secondary);
 }
 
 input {
   flex: 1;
   padding: 11px 18px;
   border-radius: 22px;
-  border: 1px solid #e4e4e4;
-  background: #f7f7f7;
+  border: 1px solid var(--border-color);
+  background: var(--panel-bg-soft);
   font-size: 14px;
   font-family: inherit;
   outline: none;
   transition: all 0.15s;
-  color: #111111;
+  color: var(--app-text);
 }
 
 input::placeholder {
-  color: #bbbbbb;
+  color: var(--text-tertiary);
 }
 
 input:focus {
-  border-color: #bbbbbb;
-  background: #ffffff;
+  border-color: var(--accent);
+  background: var(--panel-bg);
 }
 
 button {
   padding: 0;
   background: none;
   border: none;
-  color: #111111;
+  color: var(--app-text);
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 1px;

@@ -28,12 +28,12 @@ export default {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: #ffffff;
+  background: var(--panel-bg);
 }
 
 .list-header {
   padding: 20px 20px 12px;
-  border-bottom: 1px solid #ebebeb;
+  border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
 }
 
@@ -64,14 +64,14 @@ export default {
 }
 
 .header-search:hover {
-  background: #f0f0f0;
+  background: var(--panel-bg-hover);
 }
 
 .header-title {
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 2px;
-  color: #111;
+  color: var(--app-text);
   margin: 0;
 }
 
@@ -90,7 +90,7 @@ export default {
 }
 
 .chat-list::-webkit-scrollbar-thumb {
-  background: #e0e0e0;
+  background: var(--border-color);
   border-radius: 4px;
 }
 

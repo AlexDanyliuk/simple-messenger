@@ -74,23 +74,23 @@ export default {
   align-items: center;
   padding: 0 20px;
   height: 64px;
-  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
-  border-bottom: 1px solid #e8eef5;
+  background: var(--panel-bg);
+  border-bottom: 1px solid var(--border-color);
   flex-shrink: 0;
   cursor: pointer;
   transition: background 0.18s ease, box-shadow 0.18s ease;
   gap: 12px;
 }
 .chat-head:hover {
-  background: linear-gradient(180deg, #ffffff 0%, #f7fafc 100%);
-  box-shadow: inset 0 -1px 0 rgba(148, 163, 184, 0.14);
+  background: var(--panel-bg-hover);
+  box-shadow: inset 0 -1px 0 var(--border-color);
 }
 
 .chat-head__avatar {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+  background: var(--accent);
   color: #fff;
   font-size: 15px;
   font-weight: 700;
@@ -99,7 +99,7 @@ export default {
   justify-content: center;
   flex-shrink: 0;
   overflow: hidden;
-  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.18);
+  box-shadow: var(--shadow-lg);
 }
 
 .head-avatar-img {
@@ -119,26 +119,26 @@ export default {
 .chat-head__title {
   font-weight: 700;
   font-size: 15px;
-  color: #0f172a;
+  color: var(--app-text);
 }
 
 .chat-head__sub {
   font-size: 12px;
-  color: #64748b;
+  color: var(--text-secondary);
 }
 
-.status-online  { color: #4caf50 !important; }
-.status-offline { color: #aaaaaa !important; }
+.status-online  { color: var(--success) !important; }
+.status-offline { color: var(--text-tertiary) !important; }
 
 .chat-head__hint {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--text-tertiary);
   white-space: nowrap;
   transition: color 0.18s ease, transform 0.18s ease;
 }
 
 .chat-head:hover .chat-head__hint {
-  color: #64748b;
+  color: var(--text-secondary);
   transform: translateX(2px);
 }
 
@@ -146,7 +146,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #4caf50;
+  color: var(--success);
   font-size: 12px;
 }
 

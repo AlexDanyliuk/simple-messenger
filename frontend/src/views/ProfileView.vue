@@ -2,14 +2,29 @@
   <div class="page">
 
     <div class="topbar">
-      <button class="back-btn" @click="$router.push('/chats')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <path d="M19 12H5M5 12l7 7M5 12l7-7"
-            stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        {{ t("profileBack") }}
-      </button>
+      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+        <button class="back-btn" @click="$router.push('/chats')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M19 12H5M5 12l7 7M5 12l7-7"
+              stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          {{ t("profileBack") }}
+        </button>
+        <div class="theme-language-controls profile-controls">
+          <button
+            :class="['theme-toggle', { active: isDark }]"
+            @click="toggleTheme"
+            :title="isDark ? 'Світла тема' : 'Темна тема'"
+          >
+            {{ isDark ? '☀️' : '🌙' }}
+          </button>
+          <select v-model="currentLanguage" @change="changeLanguage" class="language-select">
+            <option value="uk">Українська</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+      </div>
     </div>
 
     <div class="card">
@@ -89,6 +104,47 @@
 
         <button class="btn-save" @click="updateProfile" :disabled="saving">{{ saving ? t("profileSaving") : t("profileSave") }}</button>
 
+        <div class="password-section">
+          <h3>{{ t("profileChangePasswordTitle") }}</h3>
+
+          <div class="field">
+            <label>{{ t("profileCurrentPassword") }}</label>
+            <input
+              v-model="passwordForm.currentPassword"
+              type="password"
+              @blur="touchPassword('currentPassword')"
+              :class="{ 'input-error': passwordErrors.currentPassword }"
+            />
+            <span v-if="passwordErrors.currentPassword" class="field-error">{{ passwordErrors.currentPassword }}</span>
+          </div>
+
+          <div class="field">
+            <label>{{ t("profileNewPassword") }}</label>
+            <input
+              v-model="passwordForm.newPassword"
+              type="password"
+              @blur="touchPassword('newPassword')"
+              :class="{ 'input-error': passwordErrors.newPassword }"
+            />
+            <span v-if="passwordErrors.newPassword" class="field-error">{{ passwordErrors.newPassword }}</span>
+          </div>
+
+          <div class="field">
+            <label>{{ t("profileConfirmNewPassword") }}</label>
+            <input
+              v-model="passwordForm.confirmPassword"
+              type="password"
+              @blur="touchPassword('confirmPassword')"
+              :class="{ 'input-error': passwordErrors.confirmPassword }"
+            />
+            <span v-if="passwordErrors.confirmPassword" class="field-error">{{ passwordErrors.confirmPassword }}</span>
+          </div>
+
+          <button class="btn-password" @click="changePassword" :disabled="savingPassword">
+            {{ savingPassword ? t("profileSaving") : t("profileChangePasswordSubmit") }}
+          </button>
+        </div>
+
         <div v-if="message" class="msg-banner msg-success">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           {{ message }}
@@ -120,7 +176,7 @@
 <script>
 import api from "../services/api";
 import { disconnect } from "../services/websocket";
-import { applyUserPreferences, preferences, t } from "../services/userPreferences";
+import { applyUserPreferences, preferences, t, applyTheme, applyLanguage } from "../services/userPreferences";
 
 export default {
   name: "ProfileView",
@@ -132,10 +188,23 @@ export default {
       message: "",
       error: "",
       touched: { username: false, fullName: false },
+      passwordForm: {
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+      },
+      passwordTouched: {
+        currentPassword: false,
+        newPassword: false,
+        confirmPassword: false
+      },
+      savingPassword: false,
       avatarPreview: null,
       avatarFile: null,
       avatarUploading: false,
-      prefs: preferences
+      prefs: preferences,
+      isDark: preferences.theme === "dark",
+      currentLanguage: preferences.language
     };
   },
   computed: {
@@ -161,6 +230,34 @@ export default {
         else if (!/^[a-zA-Z]+(?:[ '-][a-zA-Z]+)*$/.test(fullName)) e.fullName = t("registerFullNameLatinOnly");
       }
       return e;
+    },
+    passwordErrors() {
+      const e = {};
+      if (this.passwordTouched.currentPassword && !this.passwordForm.currentPassword) {
+        e.currentPassword = t("loginPasswordRequired");
+      }
+
+      if (this.passwordTouched.newPassword && !this.passwordForm.newPassword) {
+        e.newPassword = t("registerPasswordRequired");
+      } else if (this.passwordTouched.newPassword && this.passwordForm.newPassword.length < 8) {
+        e.newPassword = t("registerPasswordMin");
+      } else if (this.passwordTouched.newPassword && !/[A-Z]/.test(this.passwordForm.newPassword)) {
+        e.newPassword = t("registerPasswordUpper");
+      } else if (this.passwordTouched.newPassword && !/[a-z]/.test(this.passwordForm.newPassword)) {
+        e.newPassword = t("registerPasswordLower");
+      } else if (this.passwordTouched.newPassword && !/[0-9]/.test(this.passwordForm.newPassword)) {
+        e.newPassword = t("registerPasswordDigit");
+      } else if (this.passwordTouched.newPassword && /\s/.test(this.passwordForm.newPassword)) {
+        e.newPassword = t("registerPasswordNoSpaces");
+      }
+
+      if (this.passwordTouched.confirmPassword && !this.passwordForm.confirmPassword) {
+        e.confirmPassword = t("registerConfirmRequired");
+      } else if (this.passwordTouched.confirmPassword && this.passwordForm.confirmPassword !== this.passwordForm.newPassword) {
+        e.confirmPassword = t("registerConfirmMismatch");
+      }
+
+      return e;
     }
   },
   async mounted() {
@@ -184,6 +281,16 @@ export default {
   },
   methods: {
     t,
+    toggleTheme() {
+      this.isDark = !this.isDark;
+      this.user.theme = this.isDark ? "dark" : "light";
+      applyTheme(this.user.theme);
+    },
+    changeLanguage() {
+      this.user.language = this.currentLanguage;
+      applyLanguage(this.currentLanguage);
+      this.$forceUpdate();
+    },
     normalizeUsername() {
       this.user.username = this.user.username.replace(/\s+/g, "");
     },
@@ -195,6 +302,9 @@ export default {
     },
     touch(field) {
       this.touched[field] = true;
+    },
+    touchPassword(field) {
+      this.passwordTouched[field] = true;
     },
     isValid() {
       Object.keys(this.touched).forEach(k => (this.touched[k] = true));
@@ -286,54 +396,99 @@ export default {
       } finally {
         this.avatarUploading = false;
       }
+    },
+
+    async changePassword() {
+      Object.keys(this.passwordTouched).forEach(key => {
+        this.passwordTouched[key] = true;
+      });
+
+      if (Object.keys(this.passwordErrors).length > 0) {
+        return;
+      }
+
+      this.savingPassword = true;
+      this.error = "";
+      this.message = "";
+
+      try {
+        await api.patch("/user/password", {
+          currentPassword: this.passwordForm.currentPassword,
+          newPassword: this.passwordForm.newPassword
+        });
+
+        this.passwordForm.currentPassword = "";
+        this.passwordForm.newPassword = "";
+        this.passwordForm.confirmPassword = "";
+        Object.keys(this.passwordTouched).forEach(key => {
+          this.passwordTouched[key] = false;
+        });
+        this.message = t("profilePasswordChanged");
+        setTimeout(() => { this.message = ""; }, 3000);
+      } catch (err) {
+        if (err.response?.status === 401) {
+          this.logout();
+        } else {
+          this.error = err.response?.data?.message || t("profileUpdateError");
+        }
+      } finally {
+        this.savingPassword = false;
+      }
     }
   }
 };
 </script>
-
 <style scoped>
 .page {
   min-height: 100vh;
-  background: #f7f7f7;
+  background: var(--app-bg);
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 28px 16px 60px;
+  padding: 32px 16px 60px;
   font-family: inherit;
 }
 
 .topbar {
   width: 100%;
-  max-width: 440px;
-  margin-bottom: 16px;
+  max-width: 500px;
+  margin-bottom: 20px;
 }
 
 .back-btn {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  background: none;
-  border: none;
-  font-size: 13px;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  font-size: 14px;
   font-weight: 500;
-  color: #666;
+  color: var(--app-text);
   cursor: pointer;
-  padding: 7px 12px 7px 8px;
+  padding: 10px 14px;
   border-radius: 8px;
-  transition: background 0.12s, color 0.12s;
+  transition: all 0.2s ease;
   font-family: inherit;
 }
+
 .back-btn:hover {
-  background: #e8e8e8;
-  color: #111;
+  background: var(--panel-bg-hover);
+  border-color: var(--border-color);
+  transform: translateX(-2px);
+}
+
+.back-btn svg {
+  flex-shrink: 0;
+  stroke: currentColor;
 }
 
 .card {
   width: 100%;
-  max-width: 440px;
-  background: #fff;
-  border-radius: 18px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+  max-width: 500px;
+  background: var(--panel-bg);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -343,237 +498,311 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 36px 40px 24px;
-  background: #fafafa;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 40px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(124, 58, 237, 0.05));
+  border-bottom: 1px solid var(--border-color);
 }
 
 .avatar-wrap {
   position: relative;
   cursor: pointer;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
+
 .avatar-wrap:hover .avatar-overlay {
   opacity: 1;
 }
 
 .avatar {
-  width: 72px;
-  height: 72px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  background: #111;
+  background: #649C2B;
   color: #fff;
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .avatar-img {
-  width: 72px;
-  height: 72px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
   object-fit: cover;
   display: block;
-  background: #eee;
+  background: var(--panel-bg-soft);
 }
 
 .avatar-overlay {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: rgba(0,0,0,0.45);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: opacity 0.18s;
+  transition: opacity 0.2s ease;
+}
+
+.avatar-overlay svg {
+  width: 20px;
+  height: 20px;
+  color: white;
 }
 
 .avatar-actions {
   display: flex;
-  gap: 8px;
-  margin-bottom: 14px;
+  gap: 10px;
+  margin-bottom: 16px;
 }
 
 .btn-avatar-save {
-  padding: 7px 18px;
+  padding: 10px 18px;
   border-radius: 8px;
   border: none;
-  background: #111;
+  background: #649C2B;
   color: #fff;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: all 0.2s ease;
 }
-.btn-avatar-save:hover { opacity: 0.75; }
-.btn-avatar-save:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btn-avatar-save:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(100, 156, 43, 0.3);
+}
+
+.btn-avatar-save:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 .btn-avatar-cancel {
-  padding: 7px 14px;
+  padding: 10px 16px;
   border-radius: 8px;
-  border: 1px solid #e0e0e0;
-  background: #fff;
-  color: #555;
-  font-size: 13px;
-  font-weight: 500;
+  border: 1.5px solid var(--border-color);
+  background: transparent;
+  color: var(--app-text);
+  font-size: 14px;
+  font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  transition: background 0.12s;
+  transition: all 0.2s ease;
 }
-.btn-avatar-cancel:hover { background: #f5f5f5; }
+
+.btn-avatar-cancel:hover {
+  background: var(--panel-bg-hover);
+  border-color: var(--border-color-strong);
+}
+
 .avatar-name {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
-  color: #111;
+  color: var(--app-text);
   margin-bottom: 4px;
+  text-align: center;
 }
+
 .avatar-email {
-  font-size: 13px;
-  color: #aaa;
+  font-size: 14px;
+  color: var(--text-tertiary);
+  text-align: center;
 }
 
 .form-section {
-  padding: 28px 36px 4px;
+  padding: 32px;
   display: flex;
   flex-direction: column;
 }
+
 .loading {
-  padding: 24px 36px;
-  color: #aaa;
+  padding: 28px 32px;
+  color: var(--text-tertiary);
   font-size: 14px;
+  text-align: center;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
+
 .field label {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
-  color: #aaa;
-  margin-bottom: 6px;
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
 }
-input {
+
+input, select {
   padding: 11px 14px;
-  border-radius: 10px;
-  border: 1px solid #e4e4e4;
-  background: #f9f9f9;
+  border-radius: 8px;
+  border: 1.5px solid var(--border-color);
+  background: var(--app-bg-secondary);
   font-size: 14px;
   font-family: inherit;
-  color: #111;
+  color: var(--app-text);
   outline: none;
-  transition: border-color 0.15s, background 0.15s;
+  transition: all 0.2s ease;
 }
-select {
-  padding: 11px 14px;
-  border-radius: 10px;
-  border: 1px solid #e4e4e4;
-  background: #f9f9f9;
-  font-size: 14px;
-  font-family: inherit;
-  color: #111;
-  outline: none;
-  transition: border-color 0.15s, background 0.15s;
+
+input::placeholder, select::placeholder {
+  color: var(--text-tertiary);
 }
-select:focus {
-  border-color: #111;
-  background: #fff;
+
+input:focus, select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
-input::placeholder { color: #ccc; }
-input:focus {
-  border-color: #111;
-  background: #fff;
-}
+
 input:disabled {
-  background: #f3f3f3;
-  color: #bbb;
+  background: var(--panel-bg-soft);
+  color: var(--text-tertiary);
   cursor: not-allowed;
-  border-color: #eee;
+  border-color: var(--border-color);
+  opacity: 0.6;
 }
 
 .btn-save {
-  padding: 13px;
-  border-radius: 10px;
+  padding: 12px;
+  border-radius: 8px;
   border: none;
-  background: #111;
+  background: #649C2B;
   color: #fff;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 15px;
   font-family: inherit;
   cursor: pointer;
-  transition: opacity 0.15s;
-  margin-top: 4px;
+  transition: all 0.2s ease;
+  margin-top: 8px;
 }
-.btn-save:hover { opacity: 0.78; }
+
+.btn-save:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(100, 156, 43, 0.3);
+}
+
+.btn-save:disabled {
+  opacity: 0.5;
+}
+
+.password-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+.password-section h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 16px;
+  color: var(--app-text);
+}
+
+.btn-password {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border-color);
+  background: transparent;
+  color: var(--app-text);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-password:hover:not(:disabled) {
+  background: var(--panel-bg-hover);
+  border-color: var(--border-color-strong);
+}
+
+.btn-password:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 .msg-banner {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 14px;
-  padding: 11px 14px;
-  border-radius: 10px;
-  font-size: 13px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 14px;
   font-weight: 500;
-  animation: fadeIn 0.2s ease;
-}
-.msg-success {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #15803d;
-}
-.msg-error {
-  background: #fff1f2;
-  border: 1px solid #fecdd3;
-  color: #be123c;
+  border: 1px solid;
+  animation: slideIn 0.3s ease-out;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.msg-success {
+  background: var(--success-light);
+  border-color: var(--success);
+  color: var(--success-text);
+}
+
+html[data-theme="dark"] .msg-success {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: var(--success);
+}
+
+.msg-error {
+  background: var(--error-light);
+  border-color: var(--error);
+  color: var(--error-text);
+}
+
+html[data-theme="dark"] .msg-error {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: var(--error);
 }
 
 .field-error {
-  display: inline-flex;
-  align-items: center;
-  width: 100%;
-  font-size: 12px;
-  line-height: 1.45;
-  color: #be123c;
-  background: #fff1f2;
-  border: 1px solid #fecdd3;
-  border-radius: 10px;
-  padding: 8px 10px;
+  font-size: 13px;
+  color: var(--error);
   margin-top: 6px;
-  animation: fadeIn 0.2s ease;
+  font-weight: 500;
 }
+
 .field-hint {
-  font-size: 12px;
-  color: #667085;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 8px 10px;
+  font-size: 13px;
+  color: var(--text-tertiary);
   margin-top: 6px;
 }
+
 .input-error {
-  border-color: #e11d48 !important;
-  background: linear-gradient(180deg, #fff8f8 0%, #fff1f2 100%) !important;
-  box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.08);
+  border-color: var(--error) !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
 }
 
 .logout-area {
-  padding: 24px 36px 28px;
-  border-top: 1px solid #f0f0f0;
-  margin-top: 24px;
+  padding: 24px 32px 28px;
+  border-top: 1px solid var(--border-color);
+  margin-top: 20px;
 }
+
 .btn-logout {
   display: flex;
   align-items: center;
@@ -581,18 +810,176 @@ input:disabled {
   gap: 8px;
   width: 100%;
   padding: 12px 16px;
-  border-radius: 10px;
-  border: 1px solid #f0dedd;
-  background: #fff;
-  color: #cc2200;
+  border-radius: 8px;
+  border: 1.5px solid var(--error);
+  background: transparent;
+  color: var(--error);
   font-weight: 600;
-  font-size: 14px;
+  font-size: 15px;
   font-family: inherit;
   cursor: pointer;
-  transition: background 0.12s, border-color 0.12s;
+  transition: all 0.2s ease;
 }
+
 .btn-logout:hover {
-  background: #fff4f2;
-  border-color: #f5bfb8;
+  background: rgba(239, 68, 68, 0.1);
+  border-color: var(--error);
 }
+
+@media (max-width: 768px) {
+  .page {
+    padding: 24px 12px 50px;
+  }
+
+  .card {
+    max-width: 100%;
+  }
+
+  .avatar-section {
+    padding: 32px 24px;
+  }
+
+  .avatar {
+    width: 70px;
+    height: 70px;
+    font-size: 28px;
+  }
+
+  .avatar-img {
+    width: 70px;
+    height: 70px;
+  }
+
+  .avatar-name {
+    font-size: 18px;
+  }
+
+  .form-section {
+    padding: 24px;
+  }
+
+  .field {
+    margin-bottom: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 16px 12px 40px;
+  }
+
+  .card {
+    border-radius: 12px;
+  }
+
+  .avatar-section {
+    padding: 24px 16px;
+  }
+
+  .avatar {
+    width: 64px;
+    height: 64px;
+    font-size: 26px;
+  }
+
+  .avatar-img {
+    width: 64px;
+    height: 64px;
+  }
+
+  .avatar-name {
+    font-size: 16px;
+  }
+
+  .avatar-email {
+    font-size: 12px;
+  }
+
+  .form-section {
+    padding: 20px 16px;
+  }
+
+  .field {
+    margin-bottom: 14px;
+  }
+
+  input, select {
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+
+  .btn-save, .btn-password, .btn-logout {
+    font-size: 14px;
+    padding: 10px 14px;
+  }
+
+  .msg-banner {
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+
+  .logout-area {
+    padding: 16px;
+    margin-top: 16px;
+  }
+}
+
+.theme-language-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  z-index: 100;
+}
+
+.profile-controls {
+  position: relative;
+}
+
+.theme-toggle {
+  background: var(--panel-bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--app-text);
+}
+
+.theme-toggle:hover {
+  background: var(--panel-bg-strong);
+  transform: scale(1.05);
+}
+
+.language-select {
+  background: var(--panel-bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: var(--app-text);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.language-select:hover {
+  background: var(--panel-bg-strong);
+}
+
+.language-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.language-select option {
+  background: var(--panel-bg);
+  color: var(--app-text);
+}
+
 </style>

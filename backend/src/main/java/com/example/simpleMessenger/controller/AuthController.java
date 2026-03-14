@@ -1,10 +1,15 @@
 package com.example.simpleMessenger.controller;
 
 import com.example.simpleMessenger.dto.JwtAuthenticationDto;
+import com.example.simpleMessenger.dto.ForgotPasswordConfirmDto;
+import com.example.simpleMessenger.dto.ForgotPasswordRequestDto;
+import com.example.simpleMessenger.dto.ForgotPasswordRequestResponseDto;
+import com.example.simpleMessenger.dto.RegistrationVerificationRequestDto;
 import com.example.simpleMessenger.dto.RefreshTokenDto;
 import com.example.simpleMessenger.dto.UserCredentialsDto;
 import com.example.simpleMessenger.security.AuthCookieService;
 import com.example.simpleMessenger.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -21,17 +26,12 @@ public class AuthController {
     private final AuthCookieService authCookieService;
 
     @PostMapping("/sign-in")
-    public ResponseEntity<Void> signIn(@RequestBody UserCredentialsDto userCredentialsDto) {
-        try {
-            JwtAuthenticationDto jwtAuthenticationDto = userService.singIn(userCredentialsDto);
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.SET_COOKIE, authCookieService.buildAccessTokenCookie(jwtAuthenticationDto.getToken()).toString())
-                    .header(HttpHeaders.SET_COOKIE, authCookieService.buildRefreshTokenCookie(jwtAuthenticationDto.getRefreshToken()).toString())
-                    .build();
-
-        } catch (AuthenticationException e) {
-            throw new RuntimeException("Authentication" + e.getMessage());
-        }
+    public ResponseEntity<Void> signIn(@Valid @RequestBody UserCredentialsDto userCredentialsDto) throws AuthenticationException {
+        JwtAuthenticationDto jwtAuthenticationDto = userService.singIn(userCredentialsDto);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, authCookieService.buildAccessTokenCookie(jwtAuthenticationDto.getToken()).toString())
+                .header(HttpHeaders.SET_COOKIE, authCookieService.buildRefreshTokenCookie(jwtAuthenticationDto.getRefreshToken()).toString())
+                .build();
     }
 
     @PostMapping("/refresh")
@@ -64,6 +64,28 @@ public class AuthController {
                 .header(HttpHeaders.SET_COOKIE, authCookieService.clearAccessTokenCookie().toString())
                 .header(HttpHeaders.SET_COOKIE, authCookieService.clearRefreshTokenCookie().toString())
                 .build();
+    }
+
+    @PostMapping("/forgot-password/request")
+    public ResponseEntity<ForgotPasswordRequestResponseDto> requestPasswordReset(
+            @Valid @RequestBody ForgotPasswordRequestDto forgotPasswordRequestDto
+    ) {
+        return ResponseEntity.ok(userService.requestPasswordReset(forgotPasswordRequestDto));
+    }
+
+    @PostMapping("/register/request-code")
+    public ResponseEntity<ForgotPasswordRequestResponseDto> requestRegistrationVerificationCode(
+            @Valid @RequestBody RegistrationVerificationRequestDto requestDto
+    ) {
+        return ResponseEntity.ok(userService.requestRegistrationVerificationCode(requestDto));
+    }
+
+    @PostMapping("/forgot-password/confirm")
+    public ResponseEntity<Void> confirmPasswordReset(
+            @Valid @RequestBody ForgotPasswordConfirmDto forgotPasswordConfirmDto
+    ) throws AuthenticationException {
+        userService.confirmPasswordReset(forgotPasswordConfirmDto);
+        return ResponseEntity.ok().build();
     }
 
 }
